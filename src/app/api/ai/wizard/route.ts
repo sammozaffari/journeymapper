@@ -315,10 +315,18 @@ export async function POST(request: Request) {
             ];
 
             if (findingsToInsert.length > 0) {
-              const { error } = await supabase
+              const { data: insertedFindings, error } = await supabase
                 .from("findings")
-                .insert(findingsToInsert);
+                .insert(findingsToInsert)
+                .select("id, finding_type");
               if (error) console.error("Error saving findings:", error);
+              // Attach finding IDs to output so Phase 3 can link them to nodes
+              if (insertedFindings) {
+                output._finding_ids = insertedFindings.map((f: any) => f.id);
+                output._pain_point_finding_ids = insertedFindings
+                  .filter((f: any) => f.finding_type === "pain_point")
+                  .map((f: any) => f.id);
+              }
             }
             break;
           }
@@ -457,6 +465,77 @@ export async function POST(request: Request) {
                 .insert(edgesToInsert);
               if (edgesError)
                 console.error("Error creating edges:", edgesError);
+            }
+
+            // Auto-link findings to nodes (traceability chain)
+            // Get pain point finding IDs from Phase 1 output (passed via previousOutputs)
+            const contextFindings = previousOutputs?.context;
+            const painPointFindingIds = contextFindings?._pain_point_finding_ids || [];
+            const allFindingIds = contextFindings?._finding_ids || [];
+
+            if (allFindingIds.length > 0 && insertedNodes.length > 0) {
+              const findingNodeLinks: Array<{ finding_id: string; node_id: string }> = [];
+
+              // Link pain point findings to pain point nodes
+              const painPointNodes = insertedNodes.filter(
+                (n: any) => n.node_type === "pain_point"
+              );
+              painPointFindingIds.forEach((fid: string, i: number) => {
+                if (painPointNodes[i]) {
+                  findingNodeLinks.push({
+                    finding_id: fid,
+                    node_id: painPointNodes[i].id,
+                  });
+                }
+              });
+
+              // Link remaining findings to touchpoint/action nodes round-robin
+              const touchpointNodes = insertedNodes.filter(
+                (n: any) =>
+                  n.node_type === "touchpoint" || n.node_type === "action"
+              );
+              const nonPainFindings = allFindingIds.filter(
+                (id: string) => !painPointFindingIds.includes(id)
+              );
+              nonPainFindings.forEach((fid: string, i: number) => {
+                if (touchpointNodes.length > 0) {
+                  findingNodeLinks.push({
+                    finding_id: fid,
+                    node_id: touchpointNodes[i % touchpointNodes.length].id,
+                  });
+                }
+              });
+
+              if (findingNodeLinks.length > 0) {
+                const { error: linkError } = await supabase
+                  .from("finding_node_links")
+                  .insert(findingNodeLinks);
+                if (linkError)
+                  console.error("Error creating finding-node links:", linkError);
+              }
+            }
+
+            // Auto-link personas to this blueprint
+            const personaOutput = previousOutputs?.personas;
+            if (personaOutput) {
+              // Get persona IDs from the DB (inserted in Phase 2)
+              const { data: projectPersonas } = await supabase
+                .from("personas")
+                .select("id")
+                .eq("project_id", projectId);
+
+              if (projectPersonas && projectPersonas.length > 0) {
+                const personaLinks = projectPersonas.map((p: any) => ({
+                  persona_id: p.id,
+                  journey_map_id: newMap.id,
+                }));
+
+                const { error: personaLinkError } = await supabase
+                  .from("persona_journey_links")
+                  .insert(personaLinks);
+                if (personaLinkError)
+                  console.error("Error linking personas:", personaLinkError);
+              }
             }
 
             break;

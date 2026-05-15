@@ -51,6 +51,7 @@ export default function MapCanvasPage() {
     mapId: string;
   }>();
   const [mapData, setMapData] = useState<MapData | null>(null);
+  const [linkedPersonas, setLinkedPersonas] = useState<Array<{ id: string; name: string; role: string | null }>>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
   // Track original node/edge IDs for diffing
@@ -83,6 +84,20 @@ export default function MapCanvasPage() {
             .select("*")
             .eq("journey_map_id", mapId),
         ]);
+
+      // Load linked personas
+      const { data: personaLinks } = await supabase
+        .from("persona_journey_links")
+        .select("persona_id, personas(id, name, role)")
+        .eq("journey_map_id", mapId);
+
+      if (personaLinks) {
+        setLinkedPersonas(
+          personaLinks
+            .map((l: any) => l.personas)
+            .filter(Boolean)
+        );
+      }
 
       if (mapResult.data) {
         const md = {
@@ -236,6 +251,19 @@ export default function MapCanvasPage() {
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 bg-muted/50 px-2 py-0.5 rounded">
           {mapData.mode}
         </span>
+        {linkedPersonas.length > 0 && (
+          <div className="flex items-center gap-1.5 ml-2">
+            <span className="text-[10px] text-muted-foreground/40">Personas:</span>
+            {linkedPersonas.map((p) => (
+              <span
+                key={p.id}
+                className="text-[10px] bg-rose-400/10 text-rose-400 px-1.5 py-0.5 rounded"
+              >
+                {p.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Canvas */}
