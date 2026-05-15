@@ -23,7 +23,10 @@ export function useWorkspace() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       // Get workspaces user is a member of
       const { data: memberships } = await supabase
@@ -38,29 +41,21 @@ export function useWorkspace() {
           setCurrentWorkspace(ws[0]);
         }
       } else {
-        // Auto-create a workspace for new users
-        const slug =
-          user.email?.split("@")[0]?.replace(/[^a-z0-9]/gi, "-").toLowerCase() ||
-          `workspace-${Date.now()}`;
-
-        const { data: newWorkspace } = await supabase
-          .from("workspaces")
-          .insert({
-            name: "My Workspace",
-            slug,
-          })
-          .select()
-          .single();
-
-        if (newWorkspace) {
-          await supabase.from("workspace_members").insert({
-            workspace_id: newWorkspace.id,
-            user_id: user.id,
-            role: "owner",
+        // Auto-create via API route (uses admin client to bypass RLS)
+        try {
+          const res = await fetch("/api/workspace", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
           });
 
-          setWorkspaces([newWorkspace]);
-          setCurrentWorkspace(newWorkspace);
+          if (res.ok) {
+            const newWorkspace = await res.json();
+            setWorkspaces([newWorkspace]);
+            setCurrentWorkspace(newWorkspace);
+          }
+        } catch (err) {
+          console.error("Failed to auto-create workspace:", err);
         }
       }
 

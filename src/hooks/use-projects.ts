@@ -50,6 +50,11 @@ export function useProjects(workspaceId: string | undefined) {
         .select()
         .single();
 
+      if (error) {
+        console.error("Project creation error:", error);
+        return null;
+      }
+
       if (data) {
         addProject(data);
         return data;
