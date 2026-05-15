@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -8,6 +8,8 @@ import {
   Controls,
   useNodesState,
   useEdgesState,
+  useReactFlow,
+  ReactFlowProvider,
   addEdge,
   type Connection,
   type Node,
@@ -52,34 +54,50 @@ interface JourneyCanvasProps {
   lanes: Lane[];
   initialNodes: Node[];
   initialEdges: Edge[];
-  onNodesChange?: (nodes: Node[]) => void;
-  onEdgesChange?: (edges: Edge[]) => void;
+  onSave?: (nodes: Node[], edges: Edge[]) => void;
   readOnly?: boolean;
 }
 
-export function JourneyCanvas({
+function JourneyCanvasInner({
   stages,
   lanes,
   initialNodes,
   initialEdges,
-  onNodesChange,
-  onEdgesChange,
+  onSave,
   readOnly = false,
 }: JourneyCanvasProps) {
   const [nodes, setNodes, onNodesChangeHandler] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChangeHandler] = useEdgesState(initialEdges);
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const { screenToFlowPosition } = useReactFlow();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selectedNodeId = useCanvasStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useCanvasStore((s) => s.setSelectedNodeId);
   const activeTool = useUIStore((s) => s.activeTool);
+  const setActiveTool = useUIStore((s) => s.setActiveTool);
   const canvasMode = useUIStore((s) => s.canvasMode);
+
+  // Debounced auto-save
+  const triggerSave = useCallback(() => {
+    if (!onSave) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      onSave(nodes, edges);
+    }, 2000);
+  }, [onSave, nodes, edges]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   const onConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) => addEdge({ ...params, type: "smoothstep", animated: true }, eds));
+      triggerSave();
     },
-    [setEdges]
+    [setEdges, triggerSave]
   );
 
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -89,9 +107,47 @@ export function JourneyCanvas({
     [setSelectedNodeId]
   );
 
-  const onPaneClick = useCallback(() => {
-    setSelectedNodeId(null);
-  }, [setSelectedNodeId]);
+  // Click on canvas to create node (when a tool is active)
+  const onPaneClick = useCallback(
+    (event: React.MouseEvent) => {
+      const toolToNodeType: Record<string, string> = {
+        "add-touchpoint": "touchpoint",
+        "add-pain-point": "pain_point",
+        "add-opportunity": "opportunity",
+        "add-evidence": "evidence_item",
+        "add-action": "action",
+        "add-emotion": "emotion",
+        "add-note": "note",
+      };
+
+      const nodeType = toolToNodeType[activeTool];
+      if (nodeType && !readOnly) {
+        const position = screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+
+        const newNode: Node = {
+          id: `${nodeType}-${Date.now()}`,
+          type: nodeType,
+          position,
+          data: {
+            label: getDefaultLabel(nodeType),
+            description: "",
+          },
+        };
+
+        setNodes((nds) => [...nds, newNode]);
+        setSelectedNodeId(newNode.id);
+        setActiveTool("select");
+        triggerSave();
+        return;
+      }
+
+      setSelectedNodeId(null);
+    },
+    [activeTool, readOnly, screenToFlowPosition, setNodes, setSelectedNodeId, setActiveTool, triggerSave]
+  );
 
   // Handle drop from toolbar
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -107,10 +163,10 @@ export function JourneyCanvas({
       const type = event.dataTransfer.getData("application/reactflow-type");
       if (!type) return;
 
-      const position = {
-        x: event.clientX - (reactFlowWrapper.current?.getBoundingClientRect().left || 0),
-        y: event.clientY - (reactFlowWrapper.current?.getBoundingClientRect().top || 0),
-      };
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
       const newNode: Node = {
         id: `${type}-${Date.now()}`,
@@ -123,8 +179,22 @@ export function JourneyCanvas({
       };
 
       setNodes((nds) => [...nds, newNode]);
+      setSelectedNodeId(newNode.id);
+      triggerSave();
     },
-    [readOnly, setNodes]
+    [readOnly, setNodes, screenToFlowPosition, setSelectedNodeId, triggerSave]
+  );
+
+  // Trigger save on node move
+  const handleNodesChange: typeof onNodesChangeHandler = useCallback(
+    (changes) => {
+      onNodesChangeHandler(changes);
+      const hasPositionChange = changes.some(
+        (c) => c.type === "position" && c.dragging === false
+      );
+      if (hasPositionChange) triggerSave();
+    },
+    [onNodesChangeHandler, triggerSave]
   );
 
   // Calculate total canvas dimensions
@@ -132,14 +202,14 @@ export function JourneyCanvas({
   const totalHeight = STAGE_HEADER_HEIGHT + lanes.length * (LANE_HEIGHT + LANE_GAP);
 
   return (
-    <div className="flex-1 flex relative" ref={reactFlowWrapper}>
+    <div className="flex-1 flex relative">
       {!readOnly && <CanvasToolbar />}
 
       <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChangeHandler}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChangeHandler}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
@@ -160,12 +230,12 @@ export function JourneyCanvas({
             variant={BackgroundVariant.Dots}
             gap={20}
             size={1}
-            color="oklch(0.4 0.01 60 / 0.15)"
+            color="rgba(100, 100, 120, 0.15)"
           />
           <MiniMap
             className="!bg-card !border-border/50 !rounded-lg"
-            maskColor="oklch(0.1 0.008 60 / 0.7)"
-            nodeColor="oklch(0.55 0.15 270 / 0.6)"
+            maskColor="rgba(8, 9, 10, 0.7)"
+            nodeColor="rgba(94, 106, 210, 0.6)"
           />
           <Controls
             className="!bg-card !border-border/50 !rounded-lg !shadow-none [&>button]:!bg-card [&>button]:!border-border/30 [&>button]:!text-foreground [&>button:hover]:!bg-accent"
@@ -207,14 +277,12 @@ export function JourneyCanvas({
                       height: LANE_HEIGHT,
                     }}
                   >
-                    {/* Lane label */}
                     <div
                       className="flex items-center text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40 px-3"
                       style={{ width: LANE_LABEL_WIDTH, writingMode: "horizontal-tb" }}
                     >
                       {lane.label}
                     </div>
-                    {/* Lane background */}
                     <div
                       className="flex-1 rounded-md border border-border/10"
                       style={{ background: lane.color }}
@@ -238,16 +306,27 @@ export function JourneyCanvas({
                 n.id === id ? { ...n, data: { ...n.data, ...data } } : n
               )
             );
+            triggerSave();
           }}
           onClose={() => setSelectedNodeId(null)}
           onDelete={(id) => {
             setNodes((nds) => nds.filter((n) => n.id !== id));
             setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
             setSelectedNodeId(null);
+            triggerSave();
           }}
         />
       )}
     </div>
+  );
+}
+
+// Wrap with ReactFlowProvider so useReactFlow() works
+export function JourneyCanvas(props: JourneyCanvasProps) {
+  return (
+    <ReactFlowProvider>
+      <JourneyCanvasInner {...props} />
+    </ReactFlowProvider>
   );
 }
 

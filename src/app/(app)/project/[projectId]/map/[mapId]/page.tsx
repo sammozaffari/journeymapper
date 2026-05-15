@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { JourneyCanvas } from "@/components/canvas/JourneyCanvas";
@@ -46,10 +46,16 @@ interface MapData {
 }
 
 export default function MapCanvasPage() {
-  const { mapId } = useParams<{ projectId: string; mapId: string }>();
+  const { projectId, mapId } = useParams<{
+    projectId: string;
+    mapId: string;
+  }>();
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  // Track original node/edge IDs for diffing
+  const originalNodeIds = useRef<Set<string>>(new Set());
+  const originalEdgeIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     async function loadMap() {
@@ -79,19 +85,105 @@ export default function MapCanvasPage() {
         ]);
 
       if (mapResult.data) {
-        setMapData({
+        const md = {
           ...mapResult.data,
           stages: stagesResult.data || [],
           lanes: lanesResult.data || [],
           nodes: nodesResult.data || [],
           edges: edgesResult.data || [],
-        });
+        };
+        setMapData(md);
+        originalNodeIds.current = new Set(md.nodes.map((n: any) => n.id));
+        originalEdgeIds.current = new Set(md.edges.map((e: any) => e.id));
       }
       setLoading(false);
     }
 
     loadMap();
   }, [mapId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist canvas state to Supabase
+  const handleSave = useCallback(
+    async (nodes: Node[], edges: Edge[]) => {
+      if (!mapData) return;
+
+      const currentNodeIds = new Set(nodes.map((n) => n.id));
+      const currentEdgeIds = new Set(edges.map((e) => e.id));
+
+      // Upsert nodes (new + updated)
+      for (const node of nodes) {
+        const nodeData = {
+          id: node.id,
+          journey_map_id: mapId,
+          node_type: node.type || "touchpoint",
+          label: (node.data as any).label || "Untitled",
+          description: (node.data as any).description || null,
+          position_x: node.position.x,
+          position_y: node.position.y,
+          sentiment: (node.data as any).sentiment || null,
+          severity: (node.data as any).severity || null,
+          metadata: {},
+        };
+
+        if (originalNodeIds.current.has(node.id)) {
+          // Update existing
+          await supabase
+            .from("map_nodes")
+            .update({
+              label: nodeData.label,
+              description: nodeData.description,
+              position_x: nodeData.position_x,
+              position_y: nodeData.position_y,
+              sentiment: nodeData.sentiment,
+              severity: nodeData.severity,
+            })
+            .eq("id", node.id);
+        } else {
+          // Insert new
+          await supabase.from("map_nodes").insert(nodeData);
+          originalNodeIds.current.add(node.id);
+        }
+      }
+
+      // Delete removed nodes
+      for (const id of originalNodeIds.current) {
+        if (!currentNodeIds.has(id)) {
+          await supabase.from("map_nodes").delete().eq("id", id);
+          originalNodeIds.current.delete(id);
+        }
+      }
+
+      // Upsert edges
+      for (const edge of edges) {
+        if (!originalEdgeIds.current.has(edge.id)) {
+          await supabase.from("map_edges").insert({
+            id: edge.id,
+            journey_map_id: mapId,
+            source_node_id: edge.source,
+            target_node_id: edge.target,
+            edge_type: "flow",
+            animated: edge.animated || false,
+            label: (edge.label as string) || null,
+          });
+          originalEdgeIds.current.add(edge.id);
+        }
+      }
+
+      // Delete removed edges
+      for (const id of originalEdgeIds.current) {
+        if (!currentEdgeIds.has(id)) {
+          await supabase.from("map_edges").delete().eq("id", id);
+          originalEdgeIds.current.delete(id);
+        }
+      }
+
+      console.log("Canvas saved", {
+        nodes: nodes.length,
+        edges: edges.length,
+      });
+    },
+    [mapData, mapId, supabase]
+  );
 
   if (loading) {
     return (
@@ -152,6 +244,7 @@ export default function MapCanvasPage() {
         lanes={mapData.lanes}
         initialNodes={initialNodes}
         initialEdges={initialEdges}
+        onSave={handleSave}
       />
     </div>
   );
