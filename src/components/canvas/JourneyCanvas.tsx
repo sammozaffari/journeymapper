@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -11,6 +11,7 @@ import {
   useReactFlow,
   ReactFlowProvider,
   addEdge,
+  SelectionMode,
   type Connection,
   type Node,
   type Edge,
@@ -23,8 +24,10 @@ import "@xyflow/react/dist/style.css";
 import { nodeTypes } from "./nodes";
 import { CanvasToolbar } from "./CanvasToolbar";
 import { NodeDetailPanel } from "./NodeDetailPanel";
+import { StageManager } from "./StageManager";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useUIStore } from "@/stores/ui-store";
+import { useUndoRedo } from "@/hooks/use-undo-redo";
 import {
   STAGE_WIDTH,
   LANE_HEIGHT,
@@ -56,6 +59,8 @@ interface JourneyCanvasProps {
   initialNodes: Node[];
   initialEdges: Edge[];
   onSave?: (nodes: Node[], edges: Edge[]) => void;
+  onStagesChange?: (stages: Stage[]) => void;
+  onLanesChange?: (lanes: Lane[]) => void;
   readOnly?: boolean;
 }
 
@@ -65,18 +70,65 @@ function JourneyCanvasInner({
   initialNodes,
   initialEdges,
   onSave,
+  onStagesChange,
+  onLanesChange,
   readOnly = false,
 }: JourneyCanvasProps) {
   const [nodes, setNodes, onNodesChangeHandler] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChangeHandler] = useEdgesState(initialEdges);
   const { screenToFlowPosition } = useReactFlow();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [stageManagerOpen, setStageManagerOpen] = useState(false);
 
   const selectedNodeId = useCanvasStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useCanvasStore((s) => s.setSelectedNodeId);
   const activeTool = useUIStore((s) => s.activeTool);
   const setActiveTool = useUIStore((s) => s.setActiveTool);
   const canvasMode = useUIStore((s) => s.canvasMode);
+
+  // Undo/redo for canvas state
+  const undoRedo = useUndoRedo<{ nodes: Node[]; edges: Edge[] }>({
+    nodes: initialNodes,
+    edges: initialEdges,
+  });
+
+  const snapshotForUndo = useCallback(() => {
+    undoRedo.set({ nodes, edges });
+  }, [nodes, edges, undoRedo]);
+
+  const handleUndo = useCallback(() => {
+    undoRedo.undo();
+    const prev = undoRedo.current;
+    setNodes(prev.nodes);
+    setEdges(prev.edges);
+  }, [undoRedo, setNodes, setEdges]);
+
+  const handleRedo = useCallback(() => {
+    undoRedo.redo();
+    const next = undoRedo.current;
+    setNodes(next.nodes);
+    setEdges(next.edges);
+  }, [undoRedo, setNodes, setEdges]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    if (readOnly) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (isMod && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if (
+        (isMod && e.key === "z" && e.shiftKey) ||
+        (isMod && e.key === "y")
+      ) {
+        e.preventDefault();
+        handleRedo();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [readOnly, handleUndo, handleRedo]);
 
   // Debounced auto-save
   const triggerSave = useCallback(() => {
@@ -95,10 +147,11 @@ function JourneyCanvasInner({
 
   const onConnect = useCallback(
     (params: Connection) => {
+      snapshotForUndo();
       setEdges((eds) => addEdge({ ...params, type: "smoothstep", animated: true }, eds));
       triggerSave();
     },
-    [setEdges, triggerSave]
+    [setEdges, triggerSave, snapshotForUndo]
   );
 
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -123,6 +176,7 @@ function JourneyCanvasInner({
 
       const nodeType = toolToNodeType[activeTool];
       if (nodeType && !readOnly) {
+        snapshotForUndo();
         const position = screenToFlowPosition({
           x: event.clientX,
           y: event.clientY,
@@ -147,7 +201,7 @@ function JourneyCanvasInner({
 
       setSelectedNodeId(null);
     },
-    [activeTool, readOnly, screenToFlowPosition, setNodes, setSelectedNodeId, setActiveTool, triggerSave]
+    [activeTool, readOnly, screenToFlowPosition, setNodes, setSelectedNodeId, setActiveTool, triggerSave, snapshotForUndo]
   );
 
   // Handle drop from toolbar
@@ -163,6 +217,8 @@ function JourneyCanvasInner({
 
       const type = event.dataTransfer.getData("application/reactflow-type");
       if (!type) return;
+
+      snapshotForUndo();
 
       const position = screenToFlowPosition({
         x: event.clientX,
@@ -183,7 +239,7 @@ function JourneyCanvasInner({
       setSelectedNodeId(newNode.id);
       triggerSave();
     },
-    [readOnly, setNodes, screenToFlowPosition, setSelectedNodeId, triggerSave]
+    [readOnly, setNodes, screenToFlowPosition, setSelectedNodeId, triggerSave, snapshotForUndo]
   );
 
   // Trigger save on node move
@@ -204,7 +260,15 @@ function JourneyCanvasInner({
 
   return (
     <div className="flex-1 flex relative">
-      {!readOnly && <CanvasToolbar />}
+      {!readOnly && (
+        <CanvasToolbar
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={undoRedo.canUndo}
+          canRedo={undoRedo.canRedo}
+          onManageStages={() => setStageManagerOpen(true)}
+        />
+      )}
 
       <div className="flex-1 relative">
         <ReactFlow
@@ -223,6 +287,8 @@ function JourneyCanvasInner({
           snapGrid={[20, 20]}
           minZoom={0.1}
           maxZoom={2}
+          selectionOnDrag
+          selectionMode={SelectionMode.Partial}
           deleteKeyCode={readOnly ? null : "Backspace"}
           className="bg-background"
           proOptions={{ hideAttribution: true }}
@@ -343,11 +409,23 @@ function JourneyCanvasInner({
           }}
           onClose={() => setSelectedNodeId(null)}
           onDelete={(id) => {
+            snapshotForUndo();
             setNodes((nds) => nds.filter((n) => n.id !== id));
             setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
             setSelectedNodeId(null);
             triggerSave();
           }}
+        />
+      )}
+
+      {/* Stage & Lane Manager */}
+      {stageManagerOpen && !readOnly && (
+        <StageManager
+          stages={stages}
+          lanes={lanes}
+          onStagesChange={(newStages) => onStagesChange?.(newStages)}
+          onLanesChange={(newLanes) => onLanesChange?.(newLanes)}
+          onClose={() => setStageManagerOpen(false)}
         />
       )}
     </div>

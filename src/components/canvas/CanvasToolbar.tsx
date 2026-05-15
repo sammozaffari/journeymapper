@@ -11,6 +11,9 @@ import {
   StickyNote,
   Star,
   Link2,
+  Undo,
+  Redo,
+  Settings,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUIStore } from "@/stores/ui-store";
@@ -38,7 +41,21 @@ const toolColors: Record<string, string> = {
   "add-note": "text-yellow-400/70",
 };
 
-export function CanvasToolbar() {
+interface CanvasToolbarProps {
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onManageStages?: () => void;
+}
+
+export function CanvasToolbar({
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  onManageStages,
+}: CanvasToolbarProps) {
   const activeTool = useUIStore((s) => s.activeTool);
   const setActiveTool = useUIStore((s) => s.setActiveTool);
 
@@ -90,6 +107,59 @@ export function CanvasToolbar() {
         </TooltipTrigger>
         <TooltipContent side="right" className="text-xs">
           Toggle Mode
+        </TooltipContent>
+      </Tooltip>
+
+      <div className="w-6 border-t border-border/30 my-2" />
+
+      {/* Undo */}
+      <Tooltip>
+        <TooltipTrigger
+          className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+            canUndo
+              ? "text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer"
+              : "text-muted-foreground/30 cursor-not-allowed"
+          )}
+          onClick={onUndo}
+          disabled={!canUndo}
+        >
+          <Undo className="w-4 h-4" />
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">
+          Undo
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Redo */}
+      <Tooltip>
+        <TooltipTrigger
+          className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+            canRedo
+              ? "text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer"
+              : "text-muted-foreground/30 cursor-not-allowed"
+          )}
+          onClick={onRedo}
+          disabled={!canRedo}
+        >
+          <Redo className="w-4 h-4" />
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">
+          Redo
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Manage Stages */}
+      <Tooltip>
+        <TooltipTrigger
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all cursor-pointer"
+          onClick={onManageStages}
+        >
+          <Settings className="w-4 h-4" />
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">
+          Manage Stages & Lanes
         </TooltipContent>
       </Tooltip>
     </div>

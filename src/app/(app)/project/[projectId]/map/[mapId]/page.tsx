@@ -117,6 +117,83 @@ export default function MapCanvasPage() {
     loadMap();
   }, [mapId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Persist stage changes to Supabase
+  const handleStagesChange = useCallback(
+    async (newStages: MapData["stages"]) => {
+      if (!mapData) return;
+
+      const currentIds = new Set(newStages.map((s) => s.id));
+      const originalIds = new Set(mapData.stages.map((s) => s.id));
+
+      // Upsert stages
+      for (const stage of newStages) {
+        if (originalIds.has(stage.id)) {
+          await supabase
+            .from("stages")
+            .update({ label: stage.label, sort_order: stage.sort_order, color: stage.color })
+            .eq("id", stage.id);
+        } else {
+          await supabase.from("stages").insert({
+            id: stage.id,
+            journey_map_id: mapId,
+            label: stage.label,
+            sort_order: stage.sort_order,
+            color: stage.color,
+          });
+        }
+      }
+
+      // Delete removed stages
+      for (const s of mapData.stages) {
+        if (!currentIds.has(s.id)) {
+          await supabase.from("stages").delete().eq("id", s.id);
+        }
+      }
+
+      setMapData((prev) => (prev ? { ...prev, stages: newStages } : prev));
+    },
+    [mapData, mapId, supabase]
+  );
+
+  // Persist lane changes to Supabase
+  const handleLanesChange = useCallback(
+    async (newLanes: MapData["lanes"]) => {
+      if (!mapData) return;
+
+      const currentIds = new Set(newLanes.map((l) => l.id));
+      const originalIds = new Set(mapData.lanes.map((l) => l.id));
+
+      // Upsert lanes
+      for (const lane of newLanes) {
+        if (originalIds.has(lane.id)) {
+          await supabase
+            .from("lanes")
+            .update({ label: lane.label, sort_order: lane.sort_order, color: lane.color })
+            .eq("id", lane.id);
+        } else {
+          await supabase.from("lanes").insert({
+            id: lane.id,
+            journey_map_id: mapId,
+            lane_type: lane.lane_type,
+            label: lane.label,
+            sort_order: lane.sort_order,
+            color: lane.color,
+          });
+        }
+      }
+
+      // Delete removed lanes
+      for (const l of mapData.lanes) {
+        if (!currentIds.has(l.id)) {
+          await supabase.from("lanes").delete().eq("id", l.id);
+        }
+      }
+
+      setMapData((prev) => (prev ? { ...prev, lanes: newLanes } : prev));
+    },
+    [mapData, mapId, supabase]
+  );
+
   // Persist canvas state to Supabase
   const handleSave = useCallback(
     async (nodes: Node[], edges: Edge[]) => {
@@ -273,6 +350,8 @@ export default function MapCanvasPage() {
         initialNodes={initialNodes}
         initialEdges={initialEdges}
         onSave={handleSave}
+        onStagesChange={handleStagesChange}
+        onLanesChange={handleLanesChange}
       />
     </div>
   );
