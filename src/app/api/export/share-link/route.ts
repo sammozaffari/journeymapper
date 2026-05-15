@@ -1,18 +1,25 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import crypto from "crypto";
+import { z } from "zod";
+
+const requestSchema = z.object({
+  projectId: z.string().uuid(),
+});
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { projectId } = body;
+    const parsed = requestSchema.safeParse(body);
 
-    if (!projectId) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "projectId is required" },
+        { error: "Invalid input", details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+
+    const { projectId } = parsed.data;
 
     const supabase = await createClient();
 

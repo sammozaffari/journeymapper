@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { z } from "zod";
+
+const requestSchema = z.object({
+  name: z.string().optional(),
+  slug: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -15,9 +21,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const name = body.name || "My Workspace";
+    const parsed = requestSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const name = parsed.data.name || "My Workspace";
     const slug =
-      body.slug ||
+      parsed.data.slug ||
       user.email
         ?.split("@")[0]
         ?.replace(/[^a-z0-9]/gi, "-")

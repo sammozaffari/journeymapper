@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { JourneyCanvas } from "@/components/canvas/JourneyCanvas";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Node, Edge } from "@xyflow/react";
 
@@ -346,15 +347,20 @@ export default function MapCanvasPage() {
       </div>
 
       {/* Canvas */}
-      <JourneyCanvas
-        stages={mapData.stages}
-        lanes={mapData.lanes}
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
-        onSave={handleSave}
-        onStagesChange={handleStagesChange}
-        onLanesChange={handleLanesChange}
-      />
+      <ErrorBoundary
+        fallbackTitle="Canvas error"
+        fallbackDescription="The blueprint canvas encountered an error. Your data is saved — try refreshing."
+      >
+        <JourneyCanvas
+          stages={mapData.stages}
+          lanes={mapData.lanes}
+          initialNodes={initialNodes}
+          initialEdges={initialEdges}
+          onSave={handleSave}
+          onStagesChange={handleStagesChange}
+          onLanesChange={handleLanesChange}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

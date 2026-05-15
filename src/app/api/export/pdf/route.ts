@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient } from "@/lib/ai/client";
 import { isMockMode } from "@/lib/ai/mock-wrapper";
 import { MOCK_EXECUTIVE_SUMMARY } from "@/lib/ai/mock-data";
+import { z } from "zod";
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -623,19 +624,27 @@ function generateHTMLReport(data: {
 </html>`;
 }
 
+// ── Validation ────────────────────────────────────────────────────────
+
+const requestSchema = z.object({
+  projectId: z.string().uuid(),
+});
+
 // ── Route handler ──────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { projectId } = body;
+    const parsed = requestSchema.safeParse(body);
 
-    if (!projectId) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "projectId is required" },
+        { error: "Invalid input", details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+
+    const { projectId } = parsed.data;
 
     const supabase = await createClient();
 
