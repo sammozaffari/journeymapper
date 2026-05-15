@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "JourneyMapper — AI-Powered Service Blueprinting",
   description:
-    "Transform research into beautiful journey maps and service blueprints with AI. Built for consultants and design teams.",
+    "Transform research into beautiful service blueprints with AI. Built for consultants and design teams.",
 };
 
 export default function RootLayout({

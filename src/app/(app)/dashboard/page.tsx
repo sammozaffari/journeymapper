@@ -46,7 +46,7 @@ export default function DashboardPage() {
           <div className="space-y-1">
             <h1 className="font-semibold text-3xl tracking-tight">Your Projects</h1>
             <p className="text-sm text-muted-foreground">
-              Create and manage your journey maps and service blueprints
+              Create and manage your service blueprints
             </p>
           </div>
 

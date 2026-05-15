@@ -16,14 +16,14 @@ const PHASE_SYSTEM_PROMPTS = [
   `You are helping define a problem statement for a service design project. Ask focused questions about the service, the problem, who's affected, and what success looks like. Keep it to 2-3 exchanges. Be conversational, concise, and encouraging. Don't use bullet lists in chat — speak naturally.`,
   `You are gathering research context. Ask about existing research, customer feedback, known pain points, and behavioral patterns. Build on the problem statement from Phase 0. Keep responses short and ask one question at a time.`,
   `You are helping identify personas. Based on the problem and research context, ask about different user types, their goals, frustrations, and behaviors. Help the user think about distinct segments. Keep it conversational.`,
-  `You are mapping the customer journey. Based on everything learned, ask about the stages customers go through, touchpoints at each stage, pain points, and emotional highs/lows. Guide the user through the journey step by step.`,
+  `You are mapping the service blueprint. Based on everything learned, ask about the stages customers go through, touchpoints at each stage, pain points, and emotional highs/lows. Guide the user through the service blueprint step by step.`,
 ];
 
 const PHASE_GENERATE_PROMPTS = [
   `Based on the conversation, generate a structured problem statement. Return a JSON object with these fields: statement (string), context (string), impact (string), current_state (string), desired_state (string), constraints (string array), assumptions (string array). Be specific and grounded in what was discussed.`,
   `Based on the conversation and the problem statement context, synthesize the research into structured findings. Return a JSON object with: themes (array of {label, description, frequency}), pain_points (array of {description, severity, stage_suggestion}), insights (array of {content, type, confidence}). Use only what was discussed.`,
   `Based on the conversation, problem statement, and research context, generate personas. Return a JSON object with: personas (array of {name, role, bio, goals (string array), frustrations (string array), behaviors (string array), quotes (string array)}). Create 1-3 personas based on what was discussed.`,
-  `Based on everything discussed, generate a complete journey map structure. Return a JSON object with: stages (array of {label, description}), nodes (array of {type, label, description, stage_index, lane, sentiment?, severity?}), connections (array of {from_index, to_index, type}). The type field uses: touchpoint, pain_point, opportunity, moment_of_truth, evidence_item, action, emotion, note. The lane field uses: customer_actions, frontstage, backstage, support_processes, physical_evidence, emotional_journey.`,
+  `Based on everything discussed, generate a complete service blueprint structure. Return a JSON object with: stages (array of {label, description}), nodes (array of {type, label, description, stage_index, lane, sentiment?, severity?}), connections (array of {from_index, to_index, type}). The type field uses: touchpoint, pain_point, opportunity, moment_of_truth, evidence_item, action, emotion, note. The lane field uses: customer_actions, frontstage, backstage, support_processes, physical_evidence, emotional_journey.`,
 ];
 
 /* ---------- Mock chat responses per phase ---------- */
@@ -47,7 +47,7 @@ const MOCK_PHASE_CHAT: Record<number, string[]> = {
   3: [
     "Let's walk through the journey step by step. Starting from the very beginning — how do customers first become aware of or discover your service? What triggers their interest?",
     "Good. Now let's move further along. After they decide to try the service, what does their first experience look like? Walk me through the key touchpoints and any friction points.",
-    "I can see the full arc of the journey now — from discovery through to ongoing use. I'm ready to map this out with stages, touchpoints, pain points, and emotional states. Hit Generate to create the journey map.",
+    "I can see the full arc of the journey now — from discovery through to ongoing use. I'm ready to map this out with stages, touchpoints, pain points, and emotional states. Hit Generate to create the service blueprint.",
   ],
 };
 
@@ -349,7 +349,7 @@ export async function POST(request: Request) {
               .from("journey_maps")
               .insert({
                 project_id: projectId,
-                name: "AI-Generated Journey Map",
+                name: "AI-Generated Service Blueprint",
                 mode: "blueprint",
               })
               .select()

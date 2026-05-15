@@ -33,7 +33,7 @@ interface ProjectShellProps {
 
 const tabs = [
   { label: "Overview", icon: LayoutDashboard, segment: "" },
-  { label: "Maps", icon: Map, segment: "/map" },
+  { label: "Blueprints", icon: Map, segment: "/map" },
   { label: "Research", icon: FlaskConical, segment: "/research" },
   { label: "Personas", icon: UserCircle, segment: "/personas" },
   { label: "Stakeholders", icon: Users, segment: "/stakeholders" },

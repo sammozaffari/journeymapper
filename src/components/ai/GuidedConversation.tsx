@@ -204,12 +204,12 @@ export function GuidedConversation({
             {generatingMap ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Generating journey map...
+                Generating service blueprint...
               </>
             ) : (
               <>
                 <Map className="w-4 h-4" />
-                Generate Journey Map from Conversation
+                Generate Service Blueprint from Conversation
               </>
             )}
           </Button>

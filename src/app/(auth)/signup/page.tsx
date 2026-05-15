@@ -124,7 +124,7 @@ export default function SignupPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-6 h-px bg-brand/40" />
-              <span>Beautiful, structured journey maps</span>
+              <span>Beautiful, structured service blueprints</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-6 h-px bg-brand/40" />

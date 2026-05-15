@@ -32,6 +32,7 @@ import {
   LANE_LABEL_WIDTH,
   STAGE_GAP,
   LANE_GAP,
+  LINES_OF_VISIBILITY,
 } from "@/lib/canvas/defaults";
 
 interface Stage {
@@ -289,6 +290,38 @@ function JourneyCanvasInner({
                     />
                   </div>
                 ))}
+
+                {/* Lines of visibility */}
+                {LINES_OF_VISIBILITY.map((line) => {
+                  const y =
+                    STAGE_HEADER_HEIGHT +
+                    (line.after_sort_order + 1) * (LANE_HEIGHT + LANE_GAP) -
+                    LANE_GAP / 2;
+                  return (
+                    <div
+                      key={line.label}
+                      className="absolute flex items-center"
+                      style={{
+                        top: y - 1,
+                        left: 0,
+                        width: totalWidth,
+                      }}
+                    >
+                      <span
+                        className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground/30 px-2 bg-background/80 z-10 whitespace-nowrap"
+                        style={{ width: LANE_LABEL_WIDTH }}
+                      >
+                        {line.label}
+                      </span>
+                      <div
+                        className="flex-1 h-0"
+                        style={{
+                          borderTop: `1.5px ${line.style} rgba(94, 106, 210, 0.2)`,
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </Panel>
           )}

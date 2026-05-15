@@ -345,7 +345,7 @@ function ReviewPhase({
             <Sparkles className="w-7 h-7 text-brand" />
           </div>
           <h2 className="font-semibold text-2xl tracking-tight">
-            Your Journey Map is Ready
+            Your Service Blueprint is Ready
           </h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Review everything below, then open in the canvas editor to refine
@@ -383,7 +383,7 @@ function ReviewPhase({
         {phaseOutputs.journey && (
           <div>
             <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
-              Journey Map
+              Service Blueprint
             </h3>
             <PhaseOutput phase={3} output={phaseOutputs.journey} />
           </div>

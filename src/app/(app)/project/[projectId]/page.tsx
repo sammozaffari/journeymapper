@@ -10,7 +10,7 @@ const quickActions = [
   {
     label: "Start with AI Guide",
     description:
-      "Build a complete journey map through a guided 5-step wizard — problem, research, personas, and journey",
+      "Build a complete service blueprint through a guided 5-step wizard — problem, research, personas, and blueprint",
     icon: Sparkles,
     href: "/wizard",
     color: "text-brand",
@@ -18,7 +18,7 @@ const quickActions = [
     featured: true,
   },
   {
-    label: "Create Journey Map",
+    label: "Create Service Blueprint",
     description: "Start with a blank canvas and build your map manually",
     icon: Map,
     href: "/map",

@@ -49,9 +49,9 @@ export default function JourneyMapsPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="font-semibold text-3xl tracking-tight">Journey Maps</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Service Blueprints</h1>
           <p className="text-sm text-muted-foreground">
-            Create and manage your service blueprints and journey maps
+            Create and manage your service blueprints
           </p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -59,14 +59,14 @@ export default function JourneyMapsPage() {
             render={
               <Button className="bg-brand text-brand-foreground hover:bg-brand/90 gap-2">
                 <Plus className="w-4 h-4" />
-                New Map
+                New Blueprint
               </Button>
             }
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="font-medium text-xl">
-                Create journey map
+                Create service blueprint
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4 mt-2">
@@ -95,7 +95,7 @@ export default function JourneyMapsPage() {
                   className="bg-brand text-brand-foreground hover:bg-brand/90"
                   disabled={creating || !mapName.trim()}
                 >
-                  {creating ? "Creating..." : "Create Map"}
+                  {creating ? "Creating..." : "Create Blueprint"}
                 </Button>
               </div>
             </form>
@@ -120,9 +120,9 @@ export default function JourneyMapsPage() {
             <Map className="w-7 h-7 text-brand" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-medium text-xl">No journey maps yet</h3>
+            <h3 className="font-medium text-xl">No service blueprints yet</h3>
             <p className="text-sm text-muted-foreground max-w-md">
-              Create your first journey map to start visualizing your
+              Create your first service blueprint to start visualizing your
               customer&apos;s experience
             </p>
           </div>
@@ -131,7 +131,7 @@ export default function JourneyMapsPage() {
             className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90 gap-2"
           >
             <Plus className="w-4 h-4" />
-            New Map
+            New Blueprint
           </Button>
         </div>
       ) : (

@@ -103,11 +103,11 @@ export default async function SharePage({
           </section>
         )}
 
-        {/* Journey Maps */}
+        {/* Service Blueprints */}
         {maps.length > 0 && (
           <section className="space-y-6">
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
-              Journey Maps
+              Service Blueprints
             </h2>
             {maps.map((map: any) => (
               <div key={map.id} className="space-y-4">

@@ -52,7 +52,7 @@ interface AppSidebarProps {
 
 const projectNavItems = [
   { label: "Overview", icon: LayoutDashboard, href: "" },
-  { label: "Journey Maps", icon: Map, href: "/map" },
+  { label: "Blueprints", icon: Map, href: "/map" },
   { label: "Research", icon: FlaskConical, href: "/research" },
   { label: "Personas", icon: UserCircle, href: "/personas" },
   { label: "Stakeholders", icon: Users, href: "/stakeholders" },
