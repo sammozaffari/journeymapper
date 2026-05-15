@@ -16,7 +16,7 @@ function EvidenceNodeComponent({ data, selected }: NodeProps) {
     <div
       className={`relative px-3 py-2 rounded-lg border min-w-[140px] max-w-[200px] transition-all duration-150 ${
         selected
-          ? "border-amber ring-2 ring-amber/20 shadow-lg shadow-amber/10"
+          ? "border-brand ring-2 ring-brand/20 shadow-lg shadow-brand/10"
           : "border-border/50 hover:border-border"
       } bg-card`}
     >

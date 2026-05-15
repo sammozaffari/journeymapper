@@ -139,7 +139,7 @@ export function GuidedConversation({
                 <Sparkles className="w-7 h-7 text-violet-400" />
               </div>
               <div className="space-y-2">
-                <h3 className="font-display text-xl">AI Journey Guide</h3>
+                <h3 className="font-medium text-xl">AI Journey Guide</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
                   I&apos;ll help you map your customer&apos;s journey through a
                   structured conversation. Tell me about the service or
@@ -166,7 +166,7 @@ export function GuidedConversation({
                 className={cn(
                   "max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed",
                   message.role === "user"
-                    ? "bg-amber/15 text-foreground"
+                    ? "bg-brand/15 text-foreground"
                     : "bg-card border border-border/30 text-foreground"
                 )}
               >
@@ -231,7 +231,7 @@ export function GuidedConversation({
           <Button
             onClick={handleSend}
             disabled={!input.trim() || loading}
-            className="h-11 w-11 p-0 bg-amber text-amber-foreground hover:bg-amber/90 shrink-0"
+            className="h-11 w-11 p-0 bg-brand text-brand-foreground hover:bg-brand/90 shrink-0"
           >
             <Send className="w-4 h-4" />
           </Button>

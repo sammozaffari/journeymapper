@@ -44,7 +44,7 @@ export default function DashboardPage() {
       <main className="flex-1 p-6">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="space-y-1">
-            <h1 className="font-display text-3xl">Your Projects</h1>
+            <h1 className="font-semibold text-3xl tracking-tight">Your Projects</h1>
             <p className="text-sm text-muted-foreground">
               Create and manage your journey maps and service blueprints
             </p>
@@ -64,11 +64,11 @@ export default function DashboardPage() {
             </div>
           ) : projects.length === 0 ? (
             <div className="border border-dashed border-border/60 rounded-xl p-16 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-amber/10 flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-amber" />
+              <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+                <Sparkles className="w-7 h-7 text-brand" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-display text-xl">
+                <h3 className="font-medium text-xl">
                   Create your first project
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-md">
@@ -79,7 +79,7 @@ export default function DashboardPage() {
               <CreateProjectDialog
                 onCreateProject={createProject}
                 trigger={
-                  <Button className="mt-2 bg-amber text-amber-foreground hover:bg-amber/90 gap-2">
+                  <Button className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90 gap-2">
                     <Plus className="w-4 h-4" />
                     New Project
                   </Button>
@@ -94,12 +94,12 @@ export default function DashboardPage() {
                   href={`/project/${project.id}`}
                   className="group"
                 >
-                  <Card className="border-border/50 hover:border-amber/30 transition-all duration-200 hover:shadow-lg hover:shadow-amber/5 h-full">
+                  <Card className="border-border/50 hover:border-brand/30 transition-all duration-200 hover:shadow-lg hover:shadow-brand/5 h-full">
                     <CardContent className="p-5 space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-amber/10 flex items-center justify-center shrink-0 group-hover:bg-amber/20 transition-colors">
-                            <Map className="w-4 h-4 text-amber" />
+                          <div className="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0 group-hover:bg-brand/20 transition-colors">
+                            <Map className="w-4 h-4 text-brand" />
                           </div>
                           <h3 className="font-medium text-sm leading-tight">
                             {project.name}
@@ -156,7 +156,7 @@ export default function DashboardPage() {
               <CreateProjectDialog
                 onCreateProject={createProject}
                 trigger={
-                  <button className="border border-dashed border-border/60 rounded-xl p-5 flex flex-col items-center justify-center text-center space-y-2 hover:border-amber/30 hover:bg-amber/5 transition-all duration-200 min-h-[140px] cursor-pointer">
+                  <button className="border border-dashed border-border/60 rounded-xl p-5 flex flex-col items-center justify-center text-center space-y-2 hover:border-brand/30 hover:bg-brand/5 transition-all duration-200 min-h-[140px] cursor-pointer">
                     <Plus className="w-5 h-5 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
                       New Project

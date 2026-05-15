@@ -88,7 +88,7 @@ export function AppSidebar({
     <Sidebar className="border-r border-border/50">
       <SidebarHeader className="p-4">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center shrink-0">
             <svg
               width="16"
               height="16"
@@ -98,7 +98,7 @@ export function AppSidebar({
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-amber-foreground"
+              className="text-brand-foreground"
             >
               <path d="M3 12h4l3-9 4 18 3-9h4" />
             </svg>
@@ -172,7 +172,7 @@ export function AppSidebar({
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-accent/50 transition-colors text-left">
             <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-amber/15 text-amber text-xs font-medium">
+              <AvatarFallback className="bg-brand/15 text-brand text-xs font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>

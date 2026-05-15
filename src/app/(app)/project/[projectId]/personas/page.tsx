@@ -75,7 +75,7 @@ export default function PersonasPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="font-display text-3xl">Personas</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Personas</h1>
           <p className="text-sm text-muted-foreground">
             Create and manage personas from your research findings
           </p>
@@ -83,7 +83,7 @@ export default function PersonasPage() {
         <Button
           onClick={handleGeneratePersona}
           disabled={generating}
-          className="bg-amber text-amber-foreground hover:bg-amber/90 gap-2"
+          className="bg-brand text-brand-foreground hover:bg-brand/90 gap-2"
         >
           {generating ? (
             <>
@@ -105,7 +105,7 @@ export default function PersonasPage() {
             <UserCircle className="w-7 h-7 text-rose-400" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-display text-xl">No personas yet</h3>
+            <h3 className="font-medium text-xl">No personas yet</h3>
             <p className="text-sm text-muted-foreground max-w-md">
               Generate personas from your research data or create them manually
             </p>
@@ -113,7 +113,7 @@ export default function PersonasPage() {
           <Button
             onClick={handleGeneratePersona}
             disabled={generating}
-            className="mt-2 bg-amber text-amber-foreground hover:bg-amber/90 gap-2"
+            className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90 gap-2"
           >
             <Sparkles className="w-4 h-4" />
             Generate from Research

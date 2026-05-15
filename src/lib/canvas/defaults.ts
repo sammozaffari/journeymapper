@@ -11,7 +11,7 @@ export const DEFAULT_LANES = [
     lane_type: "customer_actions" as const,
     label: "Customer Actions",
     sort_order: 0,
-    color: "oklch(0.75 0.15 70 / 0.08)",
+    color: "rgba(94, 106, 210, 0.06)",
   },
   {
     lane_type: "frontstage" as const,

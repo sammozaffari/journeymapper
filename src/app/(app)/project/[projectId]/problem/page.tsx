@@ -106,7 +106,7 @@ export default function ProblemPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-8">
       <div className="space-y-1">
-        <h1 className="font-display text-3xl">Problem Statement</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">Problem Statement</h1>
         <p className="text-sm text-muted-foreground">
           Define and refine your problem statement with AI assistance
         </p>
@@ -130,7 +130,7 @@ export default function ProblemPage() {
           <Button
             onClick={handleRefine}
             disabled={refining || !draft.trim()}
-            className="bg-amber text-amber-foreground hover:bg-amber/90 gap-2"
+            className="bg-brand text-brand-foreground hover:bg-brand/90 gap-2"
           >
             {refining ? (
               <>
@@ -241,7 +241,7 @@ export default function ProblemPage() {
                         key={i}
                         className="text-sm text-muted-foreground flex items-start gap-2"
                       >
-                        <span className="text-amber mt-1.5">•</span>
+                        <span className="text-brand mt-1.5">•</span>
                         {c}
                       </li>
                     ))}
@@ -264,7 +264,7 @@ export default function ProblemPage() {
                         key={i}
                         className="text-sm text-muted-foreground flex items-start gap-2"
                       >
-                        <span className="text-amber mt-1.5">?</span>
+                        <span className="text-brand mt-1.5">?</span>
                         {a}
                       </li>
                     ))}

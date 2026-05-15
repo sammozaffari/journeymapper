@@ -62,7 +62,7 @@ export default function ExportsPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="font-display text-3xl">Exports</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Exports</h1>
           <p className="text-sm text-muted-foreground">
             Generate presentations, reports, and shareable links
           </p>
@@ -75,11 +75,11 @@ export default function ExportsPage() {
 
       {exports.length === 0 && !loading ? (
         <div className="border border-dashed border-border/60 rounded-xl p-16 flex flex-col items-center justify-center text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber/10 flex items-center justify-center">
-            <FileOutput className="w-7 h-7 text-amber" />
+          <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+            <FileOutput className="w-7 h-7 text-brand" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-display text-xl">No exports yet</h3>
+            <h3 className="font-medium text-xl">No exports yet</h3>
             <p className="text-sm text-muted-foreground max-w-md">
               Generate your first export to share your findings with
               stakeholders
@@ -89,7 +89,7 @@ export default function ExportsPage() {
             projectId={projectId}
             projectName={project?.name || "Project"}
             trigger={
-              <Button className="mt-2 bg-amber text-amber-foreground hover:bg-amber/90 gap-2">
+              <Button className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90 gap-2">
                 <Download className="w-4 h-4" />
                 Create Export
               </Button>
@@ -117,7 +117,7 @@ export default function ExportsPage() {
                         exp.status === "completed"
                           ? "bg-emerald-400/10 text-emerald-400"
                           : exp.status === "generating"
-                          ? "bg-amber/10 text-amber"
+                          ? "bg-brand/10 text-brand"
                           : "bg-muted"
                       }`}
                     >

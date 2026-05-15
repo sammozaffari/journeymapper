@@ -51,7 +51,7 @@ export function CreateProjectDialog({
       <DialogTrigger
         render={
           trigger || (
-            <Button className="bg-amber text-amber-foreground hover:bg-amber/90 gap-2">
+            <Button className="bg-brand text-brand-foreground hover:bg-brand/90 gap-2">
               <Plus className="w-4 h-4" />
               New Project
             </Button>
@@ -60,7 +60,7 @@ export function CreateProjectDialog({
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">
+          <DialogTitle className="font-medium text-xl">
             Create new project
           </DialogTitle>
         </DialogHeader>
@@ -111,7 +111,7 @@ export function CreateProjectDialog({
             </Button>
             <Button
               type="submit"
-              className="bg-amber text-amber-foreground hover:bg-amber/90"
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
               disabled={loading || !name.trim()}
             >
               {loading ? "Creating..." : "Create Project"}

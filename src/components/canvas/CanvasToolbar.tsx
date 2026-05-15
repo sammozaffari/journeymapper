@@ -29,7 +29,7 @@ const tools = [
 ] as const;
 
 const toolColors: Record<string, string> = {
-  "add-touchpoint": "text-amber",
+  "add-touchpoint": "text-brand",
   "add-pain-point": "text-rose-400",
   "add-opportunity": "text-emerald-400",
   "add-evidence": "text-sky-400",
@@ -59,7 +59,7 @@ export function CanvasToolbar() {
               className={cn(
                 "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer",
                 isActive
-                  ? "bg-amber/15 text-amber"
+                  ? "bg-brand/15 text-brand"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               )}
               onClick={() => setActiveTool(tool.id)}

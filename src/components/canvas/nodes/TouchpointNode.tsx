@@ -16,7 +16,7 @@ function TouchpointNodeComponent({ data, selected }: NodeProps) {
     <div
       className={`relative px-3 py-2 rounded-lg border min-w-[140px] max-w-[200px] transition-all duration-150 ${
         selected
-          ? "border-amber ring-2 ring-amber/20 shadow-lg shadow-amber/10"
+          ? "border-brand ring-2 ring-brand/20 shadow-lg shadow-brand/10"
           : "border-border/50 hover:border-border"
       } bg-card`}
     >
@@ -26,8 +26,8 @@ function TouchpointNodeComponent({ data, selected }: NodeProps) {
         className="!w-2 !h-2 !bg-muted-foreground/30 !border-0"
       />
       <div className="flex items-start gap-2">
-        <div className="w-6 h-6 rounded-md bg-amber/15 flex items-center justify-center shrink-0 mt-0.5">
-          <Circle className="w-3.5 h-3.5 text-amber" />
+        <div className="w-6 h-6 rounded-md bg-brand/15 flex items-center justify-center shrink-0 mt-0.5">
+          <Circle className="w-3.5 h-3.5 text-brand" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium leading-tight truncate">

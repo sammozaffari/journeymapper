@@ -74,15 +74,15 @@ export function ResearchUploader({
         className={cn(
           "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200",
           isDragActive
-            ? "border-amber bg-amber/5"
-            : "border-border/50 hover:border-amber/30 hover:bg-amber/5"
+            ? "border-brand bg-brand/5"
+            : "border-border/50 hover:border-brand/30 hover:bg-brand/5"
         )}
       >
         <input {...getInputProps()} />
         <Upload
           className={cn(
             "w-8 h-8 mx-auto mb-3",
-            isDragActive ? "text-amber" : "text-muted-foreground"
+            isDragActive ? "text-brand" : "text-muted-foreground"
           )}
         />
         <p className="text-sm font-medium">
@@ -119,7 +119,7 @@ export function ResearchUploader({
           <Button
             onClick={handleUpload}
             disabled={uploading}
-            className="w-full bg-amber text-amber-foreground hover:bg-amber/90 gap-2"
+            className="w-full bg-brand text-brand-foreground hover:bg-brand/90 gap-2"
           >
             {uploading ? (
               <>

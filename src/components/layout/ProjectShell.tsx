@@ -82,7 +82,7 @@ export function ProjectShell({ project, children }: ProjectShellProps) {
                   className={cn(
                     "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                     active
-                      ? "border-amber text-amber"
+                      ? "border-brand text-brand"
                       : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                   )}
                 >

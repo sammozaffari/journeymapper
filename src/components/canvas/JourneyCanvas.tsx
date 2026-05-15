@@ -165,7 +165,7 @@ export function JourneyCanvas({
           <MiniMap
             className="!bg-card !border-border/50 !rounded-lg"
             maskColor="oklch(0.1 0.008 60 / 0.7)"
-            nodeColor="oklch(0.75 0.15 70 / 0.6)"
+            nodeColor="oklch(0.55 0.15 270 / 0.6)"
           />
           <Controls
             className="!bg-card !border-border/50 !rounded-lg !shadow-none [&>button]:!bg-card [&>button]:!border-border/30 [&>button]:!text-foreground [&>button:hover]:!bg-accent"

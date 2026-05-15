@@ -49,7 +49,7 @@ export default function JourneyMapsPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="font-display text-3xl">Journey Maps</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Journey Maps</h1>
           <p className="text-sm text-muted-foreground">
             Create and manage your service blueprints and journey maps
           </p>
@@ -57,7 +57,7 @@ export default function JourneyMapsPage() {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger
             render={
-              <Button className="bg-amber text-amber-foreground hover:bg-amber/90 gap-2">
+              <Button className="bg-brand text-brand-foreground hover:bg-brand/90 gap-2">
                 <Plus className="w-4 h-4" />
                 New Map
               </Button>
@@ -65,7 +65,7 @@ export default function JourneyMapsPage() {
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="font-display text-xl">
+              <DialogTitle className="font-medium text-xl">
                 Create journey map
               </DialogTitle>
             </DialogHeader>
@@ -92,7 +92,7 @@ export default function JourneyMapsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-amber text-amber-foreground hover:bg-amber/90"
+                  className="bg-brand text-brand-foreground hover:bg-brand/90"
                   disabled={creating || !mapName.trim()}
                 >
                   {creating ? "Creating..." : "Create Map"}
@@ -116,11 +116,11 @@ export default function JourneyMapsPage() {
         </div>
       ) : maps.length === 0 ? (
         <div className="border border-dashed border-border/60 rounded-xl p-16 flex flex-col items-center justify-center text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber/10 flex items-center justify-center">
-            <Map className="w-7 h-7 text-amber" />
+          <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+            <Map className="w-7 h-7 text-brand" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-display text-xl">No journey maps yet</h3>
+            <h3 className="font-medium text-xl">No journey maps yet</h3>
             <p className="text-sm text-muted-foreground max-w-md">
               Create your first journey map to start visualizing your
               customer&apos;s experience
@@ -128,7 +128,7 @@ export default function JourneyMapsPage() {
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="mt-2 bg-amber text-amber-foreground hover:bg-amber/90 gap-2"
+            className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90 gap-2"
           >
             <Plus className="w-4 h-4" />
             New Map
@@ -142,12 +142,12 @@ export default function JourneyMapsPage() {
               onClick={() => router.push(`/project/${projectId}/map/${map.id}`)}
               className="group text-left"
             >
-              <Card className="border-border/50 hover:border-amber/30 transition-all duration-200 hover:shadow-lg hover:shadow-amber/5 h-full">
+              <Card className="border-border/50 hover:border-brand/30 transition-all duration-200 hover:shadow-lg hover:shadow-brand/5 h-full">
                 <CardContent className="p-5 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-amber/10 flex items-center justify-center shrink-0 group-hover:bg-amber/20 transition-colors">
-                        <Map className="w-4 h-4 text-amber" />
+                      <div className="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0 group-hover:bg-brand/20 transition-colors">
+                        <Map className="w-4 h-4 text-brand" />
                       </div>
                       <div>
                         <h3 className="font-medium text-sm">{map.name}</h3>

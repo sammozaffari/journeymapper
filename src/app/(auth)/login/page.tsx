@@ -48,10 +48,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel — branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative noise-bg bg-gradient-to-br from-[oklch(0.12_0.01_60)] via-[oklch(0.08_0.008_50)] to-[oklch(0.06_0.005_40)] flex-col justify-between p-12">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-[#0c0d10] via-[#08090a] to-[#05060a] flex-col justify-between p-12">
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center">
               <svg
                 width="20"
                 height="20"
@@ -61,7 +61,7 @@ export default function LoginPage() {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-amber-foreground"
+                className="text-brand-foreground"
               >
                 <path d="M3 12h4l3-9 4 18 3-9h4" />
               </svg>
@@ -73,10 +73,10 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 space-y-6">
-          <h1 className="font-display text-5xl leading-tight text-white/95">
+          <h1 className="font-semibold text-5xl tracking-tight leading-tight text-white/95">
             Map the invisible.
             <br />
-            <span className="text-amber">Design the exceptional.</span>
+            <span className="text-brand">Design the exceptional.</span>
           </h1>
           <p className="text-lg text-white/50 max-w-md leading-relaxed">
             Transform research into beautiful service blueprints and journey
@@ -92,15 +92,15 @@ export default function LoginPage() {
               key={i}
               className="h-1 flex-1 rounded-full"
               style={{
-                background: `oklch(0.75 0.15 70 / ${0.1 + i * 0.1})`,
+                background: `oklch(0.55 0.15 270 / ${0.1 + i * 0.1})`,
               }}
             />
           ))}
         </div>
 
         {/* Background decorative elements */}
-        <div className="absolute top-1/4 right-12 w-64 h-64 rounded-full bg-amber/5 blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 rounded-full bg-amber/3 blur-2xl" />
+        <div className="absolute top-1/4 right-12 w-64 h-64 rounded-full bg-brand/5 blur-3xl" />
+        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 rounded-full bg-brand/3 blur-2xl" />
       </div>
 
       {/* Right panel — login form */}
@@ -108,7 +108,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm space-y-8">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-9 h-9 rounded-lg bg-amber flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-brand flex items-center justify-center">
               <svg
                 width="18"
                 height="18"
@@ -118,7 +118,7 @@ export default function LoginPage() {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-amber-foreground"
+                className="text-brand-foreground"
               >
                 <path d="M3 12h4l3-9 4 18 3-9h4" />
               </svg>
@@ -129,7 +129,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="font-display text-3xl">Welcome back</h2>
+            <h2 className="font-semibold text-3xl tracking-tight">Welcome back</h2>
             <p className="text-muted-foreground text-sm">
               Sign in to continue mapping experiences
             </p>
@@ -227,7 +227,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-amber text-amber-foreground hover:bg-amber/90 font-medium"
+              className="w-full h-11 bg-brand text-brand-foreground hover:bg-brand/90 font-medium"
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign in"}
@@ -238,7 +238,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{" "}
             <Link
               href="/signup"
-              className="text-amber hover:text-amber/80 font-medium transition-colors"
+              className="text-brand hover:text-brand/80 font-medium transition-colors"
             >
               Create one
             </Link>

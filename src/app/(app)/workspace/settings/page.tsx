@@ -32,7 +32,7 @@ export default function WorkspaceSettingsPage() {
       <TopBar breadcrumbs={[{ label: "Workspace Settings" }]} />
       <div className="p-6 max-w-3xl mx-auto space-y-6">
         <div className="space-y-1">
-          <h1 className="font-display text-3xl">Workspace Settings</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Workspace Settings</h1>
           <p className="text-sm text-muted-foreground">
             Manage your workspace, team members, and billing
           </p>
@@ -59,7 +59,7 @@ export default function WorkspaceSettingsPage() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-amber text-amber-foreground hover:bg-amber/90"
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
             >
               {saving ? "Saving..." : "Save Changes"}
             </Button>
@@ -94,7 +94,7 @@ export default function WorkspaceSettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="bg-amber/10 text-amber border-amber/20">
+              <Badge variant="secondary" className="bg-brand/10 text-brand border-brand/20">
                 {currentWorkspace?.plan || "free"}
               </Badge>
               <span className="text-sm text-muted-foreground">

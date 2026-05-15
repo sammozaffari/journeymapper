@@ -18,8 +18,8 @@ const quickActions = [
     description: "Start mapping your customer's experience",
     icon: Map,
     href: "/map",
-    color: "text-amber",
-    bg: "bg-amber/10",
+    color: "text-brand",
+    bg: "bg-brand/10",
   },
   {
     label: "Add Research",
@@ -72,7 +72,7 @@ export default function ProjectOverviewPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       {/* Project header */}
       <div className="space-y-2">
-        <h1 className="font-display text-3xl">{project.name}</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">{project.name}</h1>
         {project.description && (
           <p className="text-muted-foreground text-sm max-w-2xl">
             {project.description}
@@ -92,7 +92,7 @@ export default function ProjectOverviewPage() {
               href={`/project/${project.id}${action.href}`}
               className="group"
             >
-              <Card className="border-border/50 hover:border-amber/20 transition-all duration-200 hover:shadow-md hover:shadow-amber/5 h-full">
+              <Card className="border-border/50 hover:border-brand/20 transition-all duration-200 hover:shadow-md hover:shadow-brand/5 h-full">
                 <CardContent className="p-4 flex items-start gap-3">
                   <div
                     className={`w-10 h-10 rounded-lg ${action.bg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}

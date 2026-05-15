@@ -24,7 +24,7 @@ interface PersonaCardProps {
 export function PersonaCard({ persona, onClick }: PersonaCardProps) {
   return (
     <Card
-      className="border-border/50 hover:border-amber/20 transition-all duration-200 hover:shadow-lg hover:shadow-amber/5 cursor-pointer"
+      className="border-border/50 hover:border-brand/20 transition-all duration-200 hover:shadow-lg hover:shadow-brand/5 cursor-pointer"
       onClick={onClick}
     >
       <CardContent className="p-5 space-y-4">
@@ -34,7 +34,7 @@ export function PersonaCard({ persona, onClick }: PersonaCardProps) {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-display text-lg">{persona.name}</h3>
+              <h3 className="font-medium text-lg">{persona.name}</h3>
               {persona.is_ai_generated && (
                 <Badge
                   variant="secondary"
@@ -97,7 +97,7 @@ export function PersonaCard({ persona, onClick }: PersonaCardProps) {
         )}
 
         {persona.quotes.length > 0 && (
-          <blockquote className="text-xs italic text-muted-foreground border-l-2 border-amber/30 pl-3">
+          <blockquote className="text-xs italic text-muted-foreground border-l-2 border-brand/30 pl-3">
             &ldquo;{persona.quotes[0]}&rdquo;
           </blockquote>
         )}

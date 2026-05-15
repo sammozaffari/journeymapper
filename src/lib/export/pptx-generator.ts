@@ -38,7 +38,7 @@ const COLORS = {
   bg: "1A1816",
   text: "F0ECE6",
   textMuted: "A8A29E",
-  amber: "D4A453",
+  brand: "5E6AD2",
   red: "E57373",
   green: "81C784",
   white: "FFFFFF",
@@ -56,7 +56,7 @@ function addBottomBar(slide: PptxGenJS.Slide) {
     y: 7.35,
     w: "100%",
     h: 0.15,
-    fill: { color: COLORS.amber },
+    fill: { color: COLORS.brand },
   });
 }
 
@@ -68,7 +68,7 @@ function addSlideTitle(slide: PptxGenJS.Slide, title: string) {
     h: 0.6,
     fontSize: 28,
     bold: true,
-    color: COLORS.amber,
+    color: COLORS.brand,
     fontFace: FONT,
   });
 
@@ -78,7 +78,7 @@ function addSlideTitle(slide: PptxGenJS.Slide, title: string) {
     y: 0.95,
     w: 1.5,
     h: 0.04,
-    fill: { color: COLORS.amber },
+    fill: { color: COLORS.brand },
   });
 }
 
@@ -107,7 +107,7 @@ function buildTitleSlide(pptx: PptxGenJS, data: ExportData) {
     y: 0,
     w: 0.12,
     h: "100%",
-    fill: { color: COLORS.amber },
+    fill: { color: COLORS.brand },
   });
 
   slide.addText(data.projectName, {
@@ -149,7 +149,7 @@ function buildTitleSlide(pptx: PptxGenJS, data: ExportData) {
     w: 4,
     h: 0.4,
     fontSize: 11,
-    color: COLORS.amber,
+    color: COLORS.brand,
     fontFace: FONT,
     italic: true,
   });
@@ -169,7 +169,7 @@ function buildExecutiveSummarySlide(pptx: PptxGenJS, summary: string) {
     y: 1.3,
     w: 0.06,
     h: 4.5,
-    fill: { color: COLORS.amber },
+    fill: { color: COLORS.brand },
   });
 
   slide.addText(summary, {
@@ -227,7 +227,7 @@ function buildJourneyOverviewSlide(pptx: PptxGenJS, data: ExportData) {
       w: boxWidth,
       h: boxHeight,
       fill: { color: COLORS.cardBg },
-      line: { color: COLORS.amber, width: 1 },
+      line: { color: COLORS.brand, width: 1 },
       rectRadius: 0.08,
     });
 
@@ -238,7 +238,7 @@ function buildJourneyOverviewSlide(pptx: PptxGenJS, data: ExportData) {
       w: boxWidth,
       h: 0.3,
       fontSize: 10,
-      color: COLORS.amber,
+      color: COLORS.brand,
       fontFace: FONT,
       bold: true,
       align: "center",
@@ -265,7 +265,7 @@ function buildJourneyOverviewSlide(pptx: PptxGenJS, data: ExportData) {
         y: yTop + boxHeight / 2 - 0.015,
         w: gap,
         h: 0.03,
-        fill: { color: COLORS.amber },
+        fill: { color: COLORS.brand },
       });
     }
   }
@@ -307,7 +307,7 @@ function buildJourneyOverviewSlide(pptx: PptxGenJS, data: ExportData) {
       w: 3,
       h: 0.35,
       fontSize: 11,
-      color: COLORS.amber,
+      color: COLORS.brand,
       fontFace: FONT,
       bold: true,
     });
@@ -323,7 +323,7 @@ function buildJourneyOverviewSlide(pptx: PptxGenJS, data: ExportData) {
         stageNodes.reduce((sum, n) => sum + (n.sentiment ?? 0), 0) /
         stageNodes.length;
       const barColor =
-        avg >= 0.3 ? COLORS.green : avg <= -0.3 ? COLORS.red : COLORS.amber;
+        avg >= 0.3 ? COLORS.green : avg <= -0.3 ? COLORS.red : COLORS.brand;
       const barHeight = Math.max(0.08, Math.abs(avg) * 0.6);
 
       slide.addShape("rect", {
@@ -381,7 +381,7 @@ function buildStageDetailSlide(
     {
       title: "Touchpoints",
       items: touchpoints,
-      color: COLORS.amber,
+      color: COLORS.brand,
       x: 0.6,
     },
     {
@@ -476,7 +476,7 @@ function buildPersonaSlide(
       w: 8.8,
       h: 0.35,
       fontSize: 14,
-      color: COLORS.amber,
+      color: COLORS.brand,
       fontFace: FONT,
     });
   }
@@ -586,7 +586,7 @@ function buildPersonaSlide(
       w: 8.4,
       h: 0.6,
       fontSize: 13,
-      color: COLORS.amber,
+      color: COLORS.brand,
       fontFace: FONT,
       italic: true,
       align: "center",
@@ -748,7 +748,7 @@ function buildKeyFindingsSlide(
   }
 
   const typeColors: Record<string, string> = {
-    insight: COLORS.amber,
+    insight: COLORS.brand,
     quote: COLORS.textMuted,
     pain_point: COLORS.red,
     need: COLORS.green,
@@ -764,7 +764,7 @@ function buildKeyFindingsSlide(
       fontSize: 11,
       color: typeColors[f.type] || COLORS.text,
       fontFace: FONT,
-      bullet: { code: "2022", color: COLORS.amber },
+      bullet: { code: "2022", color: COLORS.brand },
       lineSpacingMultiple: 1.5,
       paraSpaceAfter: 6,
     },
@@ -809,7 +809,7 @@ function buildClosingSlide(pptx: PptxGenJS, projectName: string) {
     h: 1.0,
     fontSize: 36,
     bold: true,
-    color: COLORS.amber,
+    color: COLORS.brand,
     fontFace: FONT,
     align: "center",
   });
@@ -819,7 +819,7 @@ function buildClosingSlide(pptx: PptxGenJS, projectName: string) {
     y: 2.9,
     w: 2.0,
     h: 0.04,
-    fill: { color: COLORS.amber },
+    fill: { color: COLORS.brand },
   });
 
   slide.addText("Next Steps", {
@@ -846,7 +846,7 @@ function buildClosingSlide(pptx: PptxGenJS, projectName: string) {
       fontSize: 13,
       color: COLORS.textMuted,
       fontFace: FONT,
-      bullet: { code: "2192", color: COLORS.amber },
+      bullet: { code: "2192", color: COLORS.brand },
       lineSpacingMultiple: 1.6,
       paraSpaceAfter: 8,
     },

@@ -31,7 +31,7 @@ interface ResearchItem {
 
 const statusIcons: Record<string, React.ReactNode> = {
   pending: <Clock className="w-3.5 h-3.5 text-muted-foreground" />,
-  processing: <Loader2 className="w-3.5 h-3.5 text-amber animate-spin" />,
+  processing: <Loader2 className="w-3.5 h-3.5 text-brand animate-spin" />,
   completed: <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />,
   failed: <AlertCircle className="w-3.5 h-3.5 text-rose-400" />,
 };
@@ -100,7 +100,7 @@ export default function ResearchPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="font-display text-3xl">Research</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Research</h1>
           <p className="text-sm text-muted-foreground">
             Upload, analyze, and synthesize your research data
           </p>
@@ -134,11 +134,11 @@ export default function ResearchPage() {
         <TabsContent value="library" className="mt-6">
           {items.length === 0 ? (
             <div className="border border-dashed border-border/60 rounded-xl p-16 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-amber/10 flex items-center justify-center">
-                <FlaskConical className="w-7 h-7 text-amber" />
+              <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+                <FlaskConical className="w-7 h-7 text-brand" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-display text-xl">No research yet</h3>
+                <h3 className="font-medium text-xl">No research yet</h3>
                 <p className="text-sm text-muted-foreground max-w-md">
                   Upload transcripts, surveys, or notes to get started
                 </p>

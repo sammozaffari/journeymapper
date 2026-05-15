@@ -126,7 +126,7 @@ export function NodeDetailPanel({
                 onChange={(e) =>
                   onUpdate(nodeId, { sentiment: parseFloat(e.target.value) })
                 }
-                className="w-full accent-amber"
+                className="w-full accent-brand"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
                 <span>Negative</span>

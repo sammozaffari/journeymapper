@@ -125,7 +125,7 @@ export function ExportDialog({
       <DialogTrigger
         render={
           trigger || (
-            <Button className="bg-amber text-amber-foreground hover:bg-amber/90 gap-2">
+            <Button className="bg-brand text-brand-foreground hover:bg-brand/90 gap-2">
               <Download className="w-4 h-4" />
               Export
             </Button>
@@ -134,7 +134,7 @@ export function ExportDialog({
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">
+          <DialogTitle className="font-medium text-xl">
             Export Project
           </DialogTitle>
         </DialogHeader>
@@ -179,7 +179,7 @@ export function ExportDialog({
                   className={cn(
                     "w-full flex items-center gap-4 p-4 rounded-lg border transition-all duration-150 text-left",
                     selectedFormat === option.id
-                      ? "border-amber bg-amber/5"
+                      ? "border-brand bg-brand/5"
                       : "border-border/30 hover:border-border/60"
                   )}
                 >
@@ -204,7 +204,7 @@ export function ExportDialog({
             <Button
               onClick={handleExport}
               disabled={!selectedFormat || loading}
-              className="w-full bg-amber text-amber-foreground hover:bg-amber/90 gap-2"
+              className="w-full bg-brand text-brand-foreground hover:bg-brand/90 gap-2"
             >
               {loading ? (
                 <>
