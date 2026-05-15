@@ -11,6 +11,7 @@ import {
   Users,
   MessageSquareText,
   FileOutput,
+  Lightbulb,
 } from "lucide-react";
 import { TopBar } from "./TopBar";
 import { useProjectStore } from "@/stores/project-store";
@@ -39,6 +40,7 @@ const tabs = [
   { label: "Stakeholders", icon: Users, segment: "/stakeholders" },
   { label: "Problem", icon: MessageSquareText, segment: "/problem" },
   { label: "Exports", icon: FileOutput, segment: "/exports" },
+  { label: "Recommendations", icon: Lightbulb, segment: "/recommendations" },
 ];
 
 export function ProjectShell({ project, children }: ProjectShellProps) {
