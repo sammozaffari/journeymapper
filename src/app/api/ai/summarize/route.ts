@@ -114,7 +114,7 @@ export async function POST(request: Request) {
 
     const client = getAnthropicClient();
     const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-6",
       max_tokens: 2048,
       system: `You are a UX research consultant writing an executive summary for a customer journey mapping project. Write a concise, professional executive summary in 2-3 paragraphs. Focus on:
 1. The scope and purpose of the journey mapping initiative

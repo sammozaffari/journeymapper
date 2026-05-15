@@ -169,7 +169,7 @@ export async function POST(request: Request) {
       }
 
       const response = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-opus-4-6",
         max_tokens: 1024,
         system: `You are a UX research consultant. Write a concise executive summary (2-3 paragraphs) for a journey mapping project export. Be professional, insightful, and action-oriented. Write in flowing prose, no bullet points or headings.`,
         messages: [
