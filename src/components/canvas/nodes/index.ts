@@ -11,7 +11,7 @@ export const nodeTypes = {
   touchpoint: TouchpointNode,
   pain_point: PainPointNode,
   opportunity: OpportunityNode,
-  evidence: EvidenceNode,
+  evidence_item: EvidenceNode,
   action: ActionNode,
   emotion: EmotionNode,
   note: NoteNode,

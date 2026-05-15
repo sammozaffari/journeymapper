@@ -240,6 +240,10 @@ export function AIWizard({ projectId, onComplete }: AIWizardProps) {
                   <PhaseOutput
                     phase={currentPhase}
                     output={phaseOutputs[phaseKeys[currentPhase]]}
+                    onEdit={(updated) => {
+                      const key = phaseKeys[currentPhase];
+                      setPhaseOutputs((prev) => ({ ...prev, [key]: updated }));
+                    }}
                   />
                 </div>
               </div>
