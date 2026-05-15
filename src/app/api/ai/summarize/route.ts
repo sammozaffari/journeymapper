@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAnthropicClient } from "@/lib/ai/client";
 import { createClient } from "@/lib/supabase/server";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_EXECUTIVE_SUMMARY } from "@/lib/ai/mock-data";
 
 export async function POST(request: Request) {
   try {
@@ -110,6 +112,11 @@ export async function POST(request: Request) {
           `- ${p.label}${p.severity ? ` (${p.severity})` : ""}: ${p.description || ""}`
       );
       contextParts.push(`Pain Points:\n${painSummaries.join("\n")}`);
+    }
+
+    if (isMockMode()) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return NextResponse.json({ summary: MOCK_EXECUTIVE_SUMMARY });
     }
 
     const client = getAnthropicClient();

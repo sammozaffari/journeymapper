@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { getAnthropicClient } from "@/lib/ai/client";
 import { GUIDED_CONVERSATION_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_CHAT_RESPONSES } from "@/lib/ai/mock-data";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -25,6 +27,34 @@ export async function POST(request: Request) {
     }
 
     const { messages } = parsed.data;
+
+    if (isMockMode()) {
+      const index = Math.min(
+        Math.floor(messages.length / 2),
+        MOCK_CHAT_RESPONSES.length - 1
+      );
+      const mockText = MOCK_CHAT_RESPONSES[index];
+
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            const encoder = new TextEncoder();
+            for (const char of mockText) {
+              controller.enqueue(encoder.encode(char));
+              await new Promise((resolve) => setTimeout(resolve, 20));
+            }
+            controller.close();
+          },
+        }),
+        {
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          },
+        }
+      );
+    }
 
     const formattedMessages = messages.map((m) => ({
       role: m.role as "user" | "assistant",

@@ -4,6 +4,8 @@ import { getAnthropicClient } from "@/lib/ai/client";
 import { PERSONA_GENERATION_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { personaSchema } from "@/lib/ai/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_PERSONA } from "@/lib/ai/mock-data";
 
 const requestSchema = z.object({
   projectId: z.string().uuid(),
@@ -24,24 +26,30 @@ export async function POST(request: Request) {
 
     const { projectId, context } = parsed.data;
 
-    const client = getAnthropicClient();
-    const response = await client.messages.create({
-      model: "claude-opus-4-6",
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      system: PERSONA_GENERATION_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Based on the following research data, generate a detailed persona. Return a JSON object with name, role, bio, demographics, goals, frustrations, behaviors, and quotes.\n\n${context}`,
-        },
-      ],
-    });
+    let persona;
+    if (isMockMode()) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      persona = MOCK_PERSONA;
+    } else {
+      const client = getAnthropicClient();
+      const response = await client.messages.create({
+        model: "claude-opus-4-6",
+        max_tokens: 16000,
+        thinking: { type: "adaptive" },
+        system: PERSONA_GENERATION_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: `Based on the following research data, generate a detailed persona. Return a JSON object with name, role, bio, demographics, goals, frustrations, behaviors, and quotes.\n\n${context}`,
+          },
+        ],
+      });
 
-    const textBlock = response.content.find((b) => b.type === "text");
-    const text = textBlock?.text || "";
-    const rawParsed = JSON.parse(text);
-    const persona = personaSchema.parse(rawParsed);
+      const textBlock = response.content.find((b) => b.type === "text");
+      const text = textBlock?.text || "";
+      const rawParsed = JSON.parse(text);
+      persona = personaSchema.parse(rawParsed);
+    }
 
     // Create persona record in the database
     const supabase = await createClient();

@@ -4,6 +4,8 @@ import { getAnthropicClient } from "@/lib/ai/client";
 import { PROBLEM_REFINEMENT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { problemStatementSchema } from "@/lib/ai/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_PROBLEM_STATEMENT } from "@/lib/ai/mock-data";
 
 const requestSchema = z.object({
   projectId: z.string().uuid(),
@@ -25,28 +27,34 @@ export async function POST(request: Request) {
 
     const { projectId, statement, context } = parsed.data;
 
-    const userContent = context
-      ? `Problem statement: ${statement}\n\nAdditional context:\n${context}`
-      : `Problem statement: ${statement}`;
+    let refined;
+    if (isMockMode()) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      refined = MOCK_PROBLEM_STATEMENT;
+    } else {
+      const userContent = context
+        ? `Problem statement: ${statement}\n\nAdditional context:\n${context}`
+        : `Problem statement: ${statement}`;
 
-    const client = getAnthropicClient();
-    const response = await client.messages.create({
-      model: "claude-opus-4-6",
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      system: PROBLEM_REFINEMENT_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Please refine the following problem statement into a structured format. Return a JSON object with statement, context, impact, current_state, desired_state, constraints, and assumptions.\n\n${userContent}`,
-        },
-      ],
-    });
+      const client = getAnthropicClient();
+      const response = await client.messages.create({
+        model: "claude-opus-4-6",
+        max_tokens: 16000,
+        thinking: { type: "adaptive" },
+        system: PROBLEM_REFINEMENT_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: `Please refine the following problem statement into a structured format. Return a JSON object with statement, context, impact, current_state, desired_state, constraints, and assumptions.\n\n${userContent}`,
+          },
+        ],
+      });
 
-    const textBlock = response.content.find((b) => b.type === "text");
-    const text = textBlock?.text || "";
-    const rawParsed = JSON.parse(text);
-    const refined = problemStatementSchema.parse(rawParsed);
+      const textBlock = response.content.find((b) => b.type === "text");
+      const text = textBlock?.text || "";
+      const rawParsed = JSON.parse(text);
+      refined = problemStatementSchema.parse(rawParsed);
+    }
 
     const supabase = await createClient();
 

@@ -4,6 +4,8 @@ import { getAnthropicClient } from "@/lib/ai/client";
 import { MAP_GENERATION_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { mapGenerationSchema } from "@/lib/ai/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_MAP_GENERATION } from "@/lib/ai/mock-data";
 
 const requestSchema = z.object({
   projectId: z.string().uuid(),
@@ -25,24 +27,30 @@ export async function POST(request: Request) {
 
     const { projectId, context, journeyMapId } = parsed.data;
 
-    const client = getAnthropicClient();
-    const response = await client.messages.create({
-      model: "claude-opus-4-6",
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      system: MAP_GENERATION_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Based on the following context, generate a complete journey map structure with stages, nodes, and connections. Return a JSON object.\n\n${context}`,
-        },
-      ],
-    });
+    let mapData;
+    if (isMockMode()) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      mapData = MOCK_MAP_GENERATION;
+    } else {
+      const client = getAnthropicClient();
+      const response = await client.messages.create({
+        model: "claude-opus-4-6",
+        max_tokens: 16000,
+        thinking: { type: "adaptive" },
+        system: MAP_GENERATION_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: `Based on the following context, generate a complete journey map structure with stages, nodes, and connections. Return a JSON object.\n\n${context}`,
+          },
+        ],
+      });
 
-    const textBlock = response.content.find((b) => b.type === "text");
-    const text = textBlock?.text || "";
-    const rawParsed = JSON.parse(text);
-    const mapData = mapGenerationSchema.parse(rawParsed);
+      const textBlock = response.content.find((b) => b.type === "text");
+      const text = textBlock?.text || "";
+      const rawParsed = JSON.parse(text);
+      mapData = mapGenerationSchema.parse(rawParsed);
+    }
 
     const supabase = await createClient();
     let mapId = journeyMapId;

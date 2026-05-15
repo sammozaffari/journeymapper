@@ -4,6 +4,8 @@ import { getAnthropicClient } from "@/lib/ai/client";
 import { SYNTHESIS_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { synthesisSchema } from "@/lib/ai/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_SYNTHESIS } from "@/lib/ai/mock-data";
 
 const requestSchema = z.object({
   projectId: z.string().uuid(),
@@ -42,6 +44,11 @@ export async function POST(request: Request) {
         { error: "No findings found for this project" },
         { status: 404 }
       );
+    }
+
+    if (isMockMode()) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      return NextResponse.json(MOCK_SYNTHESIS);
     }
 
     const client = getAnthropicClient();

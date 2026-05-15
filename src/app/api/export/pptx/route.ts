@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient } from "@/lib/ai/client";
 import { generatePPTX, type ExportData } from "@/lib/export/pptx-generator";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_EXECUTIVE_SUMMARY } from "@/lib/ai/mock-data";
 
 export async function POST(request: Request) {
   try {
@@ -142,49 +144,53 @@ export async function POST(request: Request) {
 
     // Generate executive summary via Claude
     let executiveSummary: string | undefined;
-    try {
-      const client = getAnthropicClient();
+    if (isMockMode()) {
+      executiveSummary = MOCK_EXECUTIVE_SUMMARY;
+    } else {
+      try {
+        const client = getAnthropicClient();
 
-      const contextParts: string[] = [
-        `Project: ${project.name}`,
-        project.description ? `Description: ${project.description}` : "",
-        `Stages: ${stages.map((s) => s.label).join(" → ")}`,
-        `${nodes.length} touchpoints/nodes mapped`,
-        `${allPainPoints.length} pain points identified`,
-        `${allOpportunities.length} opportunities identified`,
-        `${(personas ?? []).length} personas created`,
-        `${(findings ?? []).length} research findings`,
-      ].filter(Boolean);
+        const contextParts: string[] = [
+          `Project: ${project.name}`,
+          project.description ? `Description: ${project.description}` : "",
+          `Stages: ${stages.map((s) => s.label).join(" → ")}`,
+          `${nodes.length} touchpoints/nodes mapped`,
+          `${allPainPoints.length} pain points identified`,
+          `${allOpportunities.length} opportunities identified`,
+          `${(personas ?? []).length} personas created`,
+          `${(findings ?? []).length} research findings`,
+        ].filter(Boolean);
 
-      if (allPainPoints.length > 0) {
-        contextParts.push(
-          `Top pain points:\n${allPainPoints.slice(0, 5).map((p) => `- ${p}`).join("\n")}`
-        );
+        if (allPainPoints.length > 0) {
+          contextParts.push(
+            `Top pain points:\n${allPainPoints.slice(0, 5).map((p) => `- ${p}`).join("\n")}`
+          );
+        }
+
+        if ((personas ?? []).length > 0) {
+          contextParts.push(
+            `Personas: ${(personas ?? []).map((p) => `${p.name}${p.role ? ` (${p.role})` : ""}`).join(", ")}`
+          );
+        }
+
+        const response = await client.messages.create({
+          model: "claude-opus-4-6",
+          max_tokens: 1024,
+          system: `You are a UX research consultant. Write a concise executive summary (2-3 paragraphs) for a journey mapping project export. Be professional, insightful, and action-oriented. Write in flowing prose, no bullet points or headings.`,
+          messages: [
+            {
+              role: "user",
+              content: `Write an executive summary:\n\n${contextParts.join("\n")}`,
+            },
+          ],
+        });
+
+        const textBlock = response.content.find((b) => b.type === "text");
+        executiveSummary = textBlock?.text;
+      } catch (summaryError) {
+        // Non-fatal: proceed without executive summary
+        console.error("Failed to generate executive summary:", summaryError);
       }
-
-      if ((personas ?? []).length > 0) {
-        contextParts.push(
-          `Personas: ${(personas ?? []).map((p) => `${p.name}${p.role ? ` (${p.role})` : ""}`).join(", ")}`
-        );
-      }
-
-      const response = await client.messages.create({
-        model: "claude-opus-4-6",
-        max_tokens: 1024,
-        system: `You are a UX research consultant. Write a concise executive summary (2-3 paragraphs) for a journey mapping project export. Be professional, insightful, and action-oriented. Write in flowing prose, no bullet points or headings.`,
-        messages: [
-          {
-            role: "user",
-            content: `Write an executive summary:\n\n${contextParts.join("\n")}`,
-          },
-        ],
-      });
-
-      const textBlock = response.content.find((b) => b.type === "text");
-      executiveSummary = textBlock?.text;
-    } catch (summaryError) {
-      // Non-fatal: proceed without executive summary
-      console.error("Failed to generate executive summary:", summaryError);
     }
 
     // Assemble export data

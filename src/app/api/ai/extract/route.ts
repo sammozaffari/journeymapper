@@ -4,6 +4,8 @@ import { getAnthropicClient } from "@/lib/ai/client";
 import { EXTRACTION_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { extractionSchema } from "@/lib/ai/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { isMockMode } from "@/lib/ai/mock-wrapper";
+import { MOCK_EXTRACTION } from "@/lib/ai/mock-data";
 
 const requestSchema = z.object({
   researchItemId: z.string().uuid(),
@@ -31,24 +33,30 @@ export async function POST(request: Request) {
       .update({ ai_status: "processing" })
       .eq("id", researchItemId);
 
-    const client = getAnthropicClient();
-    const response = await client.messages.create({
-      model: "claude-opus-4-6",
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      system: EXTRACTION_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Please analyze the following research content and return a JSON object with themes, quotes, pain_points, insights, and overall_sentiment.\n\n${content}`,
-        },
-      ],
-    });
+    let extraction;
+    if (isMockMode()) {
+      await new Promise((r) => setTimeout(r, 1500)); // Simulate delay
+      extraction = MOCK_EXTRACTION;
+    } else {
+      const client = getAnthropicClient();
+      const response = await client.messages.create({
+        model: "claude-opus-4-6",
+        max_tokens: 16000,
+        thinking: { type: "adaptive" },
+        system: EXTRACTION_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: `Please analyze the following research content and return a JSON object with themes, quotes, pain_points, insights, and overall_sentiment.\n\n${content}`,
+          },
+        ],
+      });
 
-    const textBlock = response.content.find((b) => b.type === "text");
-    const text = textBlock?.text || "";
-    const rawParsed = JSON.parse(text);
-    const extraction = extractionSchema.parse(rawParsed);
+      const textBlock = response.content.find((b) => b.type === "text");
+      const text = textBlock?.text || "";
+      const rawParsed = JSON.parse(text);
+      extraction = extractionSchema.parse(rawParsed);
+    }
 
     // Update research item with extraction results
     await supabase
