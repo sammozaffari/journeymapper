@@ -133,6 +133,9 @@
   html {
     @apply font-sans;
   }
+  p, li, dd, blockquote {
+    text-wrap: pretty;
+  }
 }
 
 /* Custom scrollbar */
