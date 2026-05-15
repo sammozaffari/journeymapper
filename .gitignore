@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# skills (local agent tools, not project code)
+.agents/skills/
+skills-lock.json
+
 # vercel
 .vercel
 
