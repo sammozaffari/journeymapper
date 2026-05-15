@@ -263,21 +263,25 @@ export async function POST(request: Request) {
 
         switch (phase) {
           case 0: {
-            // Upsert problem statement
-            const { error } = await supabase.from("problem_statements").upsert(
-              {
+            // Delete any existing problem statement for this project, then insert
+            await supabase
+              .from("problem_statements")
+              .delete()
+              .eq("project_id", projectId);
+
+            const { error } = await supabase
+              .from("problem_statements")
+              .insert({
                 project_id: projectId,
                 statement: output.statement,
                 context: output.context,
                 impact: output.impact,
                 current_state: output.current_state,
                 desired_state: output.desired_state,
-                constraints: output.constraints,
-                assumptions: output.assumptions,
-                is_ai_generated: true,
-              },
-              { onConflict: "project_id" }
-            );
+                constraints: output.constraints || [],
+                assumptions: output.assumptions || [],
+                is_ai_refined: true,
+              });
             if (error)
               console.error("Error saving problem statement:", error);
             break;
@@ -292,30 +296,21 @@ export async function POST(request: Request) {
             const findingsToInsert = [
               ...themes.map((t: any) => ({
                 project_id: projectId,
-                type: "theme",
-                content: t.description,
-                label: t.label,
-                metadata: { frequency: t.frequency },
-                source: "ai_wizard",
+                finding_type: "insight" as const,
+                content: `${t.label}: ${t.description}`,
+                theme: t.label,
               })),
               ...painPoints.map((pp: any) => ({
                 project_id: projectId,
-                type: "pain_point",
+                finding_type: "pain_point" as const,
                 content: pp.description,
-                label: pp.description.slice(0, 60),
-                metadata: {
-                  severity: pp.severity,
-                  stage_suggestion: pp.stage_suggestion,
-                },
-                source: "ai_wizard",
+                theme: pp.stage_suggestion || null,
               })),
               ...insights.map((ins: any) => ({
                 project_id: projectId,
-                type: ins.type || "insight",
+                finding_type: (ins.type || "insight") as any,
                 content: ins.content,
-                label: ins.content.slice(0, 60),
-                metadata: { confidence: ins.confidence },
-                source: "ai_wizard",
+                sentiment: ins.confidence || null,
               })),
             ];
 
@@ -349,12 +344,13 @@ export async function POST(request: Request) {
           }
 
           case 3: {
-            // Create journey map + stages + nodes + edges
+            // Create journey map + stages + lanes + nodes + edges
             const { data: newMap, error: mapError } = await supabase
               .from("journey_maps")
               .insert({
                 project_id: projectId,
-                title: "AI Wizard Journey Map",
+                name: "AI-Generated Journey Map",
+                mode: "blueprint",
               })
               .select()
               .single();
@@ -371,8 +367,9 @@ export async function POST(request: Request) {
               (stage: any, i: number) => ({
                 journey_map_id: newMap.id,
                 label: stage.label,
-                description: stage.description,
-                order_index: i,
+                description: stage.description || null,
+                sort_order: i,
+                color: "#E2E8F0",
               })
             );
 
@@ -386,20 +383,53 @@ export async function POST(request: Request) {
               break;
             }
 
-            // Insert nodes
-            const nodesToInsert = (output.nodes || []).map((node: any) => ({
-              journey_map_id: newMap.id,
-              stage_id: insertedStages[node.stage_index]?.id,
-              type: node.type,
-              label: node.label,
-              description: node.description,
-              lane: node.lane,
-              sentiment: node.sentiment,
-              severity: node.severity,
-            }));
+            // Insert default lanes
+            const defaultLanes = [
+              { lane_type: "customer_actions", label: "Customer Actions", sort_order: 0 },
+              { lane_type: "frontstage", label: "Frontstage", sort_order: 1 },
+              { lane_type: "backstage", label: "Backstage", sort_order: 2 },
+              { lane_type: "support_processes", label: "Support Processes", sort_order: 3 },
+              { lane_type: "physical_evidence", label: "Physical Evidence", sort_order: 4 },
+              { lane_type: "emotional_journey", label: "Emotional Journey", sort_order: 5 },
+            ];
+
+            await supabase.from("lanes").insert(
+              defaultLanes.map((l) => ({ journey_map_id: newMap.id, ...l }))
+            );
+
+            // Insert nodes with positions spread across stages and lanes
+            const laneYPositions: Record<string, number> = {
+              customer_actions: 80,
+              frontstage: 260,
+              backstage: 440,
+              support_processes: 620,
+              physical_evidence: 800,
+              emotional_journey: 980,
+            };
+
+            const nodesToInsert = (output.nodes || []).map((node: any, i: number) => {
+              const stageX = 200 + (node.stage_index || 0) * 300;
+              const laneY = laneYPositions[node.lane] || 260;
+              // Offset nodes within same stage/lane to avoid overlap
+              const offsetX = (i % 3) * 40;
+              const offsetY = Math.floor(i / 5) * 30;
+
+              return {
+                journey_map_id: newMap.id,
+                stage_id: insertedStages[node.stage_index]?.id || null,
+                node_type: node.type,
+                label: node.label,
+                description: node.description || null,
+                position_x: stageX + offsetX,
+                position_y: laneY + offsetY,
+                sentiment: node.sentiment || null,
+                severity: node.severity || null,
+                metadata: {},
+              };
+            });
 
             const { data: insertedNodes, error: nodesError } = await supabase
-              .from("nodes")
+              .from("map_nodes")
               .insert(nodesToInsert)
               .select();
 
@@ -409,18 +439,21 @@ export async function POST(request: Request) {
             }
 
             // Insert edges
-            const edgesToInsert = (output.connections || []).map(
-              (conn: any) => ({
+            const edgesToInsert = (output.connections || [])
+              .filter((conn: any) =>
+                insertedNodes[conn.from_index] && insertedNodes[conn.to_index]
+              )
+              .map((conn: any) => ({
                 journey_map_id: newMap.id,
-                source_node_id: insertedNodes[conn.from_index]?.id,
-                target_node_id: insertedNodes[conn.to_index]?.id,
-                type: conn.type,
-              })
-            );
+                source_node_id: insertedNodes[conn.from_index].id,
+                target_node_id: insertedNodes[conn.to_index].id,
+                edge_type: conn.type || "flow",
+                animated: false,
+              }));
 
             if (edgesToInsert.length > 0) {
               const { error: edgesError } = await supabase
-                .from("edges")
+                .from("map_edges")
                 .insert(edgesToInsert);
               if (edgesError)
                 console.error("Error creating edges:", edgesError);
