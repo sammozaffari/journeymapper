@@ -177,6 +177,29 @@ export function NodeDetailPanel({
             </div>
           )}
 
+          {/* Channel — for touchpoints, actions, evidence */}
+          {(nodeType === "touchpoint" || nodeType === "action" || nodeType === "evidence_item") && (
+            <div className="space-y-2">
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Channel
+              </Label>
+              <select
+                value={(data.channel as string) || ""}
+                onChange={(e) => onUpdate(nodeId, { channel: e.target.value || null })}
+                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">No channel</option>
+                <option value="web">Web</option>
+                <option value="mobile">Mobile</option>
+                <option value="phone">Phone</option>
+                <option value="in_person">In-person</option>
+                <option value="email">Email</option>
+                <option value="physical">Physical</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          )}
+
           {/* Sentiment — for emotion nodes */}
           {nodeType === "emotion" && (
             <div className="space-y-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   MessageSquareText,
   FlaskConical,
@@ -12,11 +12,13 @@ import {
   ArrowLeft,
   Sparkles,
   Download,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WizardPhase } from "./WizardPhase";
 import { PhaseOutput } from "./PhaseOutput";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 interface AIWizardProps {
   projectId: string;
@@ -77,6 +79,126 @@ export function AIWizard({ projectId, onComplete }: AIWizardProps) {
   const [generatedMapId, setGeneratedMapId] = useState<string | null>(null);
 
   const phaseKeys = ["problem", "context", "personas", "journey", "review"];
+
+  // Load existing data from the database when the wizard mounts
+  useEffect(() => {
+    async function loadExistingData() {
+      const supabase = createClient();
+
+      // Check for existing problem statement
+      const { data: problem } = await supabase
+        .from("problem_statements")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (problem) {
+        setPhaseOutputs((prev) => ({ ...prev, problem }));
+        setPhaseComplete((prev) => {
+          const n = [...prev];
+          n[0] = true;
+          return n;
+        });
+      }
+
+      // Check for existing findings
+      const { data: findings } = await supabase
+        .from("findings")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (findings && findings.length > 0) {
+        const themes = findings
+          .filter((f) => f.theme)
+          .map((f) => ({
+            label: f.theme,
+            description: f.content,
+          }));
+        const pain_points = findings
+          .filter((f) => f.finding_type === "pain_point")
+          .map((f) => ({
+            description: f.content,
+            severity: f.severity || "medium",
+          }));
+        const insights = findings
+          .filter((f) => !["pain_point"].includes(f.finding_type || ""))
+          .map((f) => ({
+            content: f.content,
+            type: f.finding_type,
+          }));
+
+        setPhaseOutputs((prev) => ({
+          ...prev,
+          context: { themes, pain_points, insights },
+        }));
+        setPhaseComplete((prev) => {
+          const n = [...prev];
+          n[1] = true;
+          return n;
+        });
+      }
+
+      // Check for existing personas
+      const { data: personas } = await supabase
+        .from("personas")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (personas && personas.length > 0) {
+        setPhaseOutputs((prev) => ({ ...prev, personas: { personas } }));
+        setPhaseComplete((prev) => {
+          const n = [...prev];
+          n[2] = true;
+          return n;
+        });
+      }
+
+      // Check for existing blueprint
+      const { data: maps } = await supabase
+        .from("journey_maps")
+        .select("id, name, stages(*)")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (maps && maps.length > 0) {
+        const map = maps[0];
+        const { data: nodes } = await supabase
+          .from("map_nodes")
+          .select("*")
+          .eq("journey_map_id", map.id);
+
+        setPhaseOutputs((prev) => ({
+          ...prev,
+          journey: {
+            journey_map_id: map.id,
+            stages:
+              (map.stages as any[])?.map((s: any) => ({
+                label: s.label,
+                description: s.description,
+              })) || [],
+            nodes: (nodes || []).map((n: any) => ({
+              type: n.node_type,
+              label: n.label,
+              description: n.description,
+              stage_index: 0,
+              lane: "customer_actions",
+            })),
+          },
+        }));
+        setGeneratedMapId(map.id);
+        setPhaseComplete((prev) => {
+          const n = [...prev];
+          n[3] = true;
+          return n;
+        });
+      }
+    }
+
+    loadExistingData();
+  }, [projectId]);
 
   const handleOutputGenerated = useCallback(
     (phase: number, output: any) => {
@@ -237,6 +359,31 @@ export function AIWizard({ projectId, onComplete }: AIWizardProps) {
             {phaseComplete[currentPhase] && phaseOutputs[phaseKeys[currentPhase]] && (
               <div className="border-b border-border/50 bg-card/30 overflow-y-auto max-h-[40%]">
                 <div className="max-w-3xl mx-auto p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {PHASES[currentPhase].name} — Generated
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setPhaseComplete((prev) => {
+                          const n = [...prev];
+                          n[currentPhase] = false;
+                          return n;
+                        });
+                        setPhaseOutputs((prev) => {
+                          const n = { ...prev };
+                          delete n[phaseKeys[currentPhase]];
+                          return n;
+                        });
+                      }}
+                      className="gap-1.5 text-xs"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Regenerate
+                    </Button>
+                  </div>
                   <PhaseOutput
                     phase={currentPhase}
                     output={phaseOutputs[phaseKeys[currentPhase]]}

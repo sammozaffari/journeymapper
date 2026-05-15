@@ -214,6 +214,7 @@ export default function MapCanvasPage() {
           position_y: node.position.y,
           sentiment: (node.data as any).sentiment || null,
           severity: (node.data as any).severity || null,
+          channel: (node.data as any).channel || null,
           metadata: {},
         };
 
@@ -228,6 +229,7 @@ export default function MapCanvasPage() {
               position_y: nodeData.position_y,
               sentiment: nodeData.sentiment,
               severity: nodeData.severity,
+              channel: nodeData.channel,
             })
             .eq("id", node.id);
         } else {

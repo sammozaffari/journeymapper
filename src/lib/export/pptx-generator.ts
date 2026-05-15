@@ -30,23 +30,43 @@ export interface ExportData {
     content: string;
     type: string;
   }>;
+  recommendations?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    impact: string;
+    effort: string;
+    status: string;
+    solution_type: string;
+  }>;
+  branding?: {
+    clientName?: string;
+    clientLogo?: string; // base64 or URL
+    accentColor?: string; // hex (without #)
+  };
 }
 
 // ── Design tokens ──────────────────────────────────────────────────────
 
-const COLORS = {
+const DEFAULT_COLORS = {
   bg: "1A1816",
   text: "F0ECE6",
   textMuted: "A8A29E",
   brand: "5E6AD2",
   red: "E57373",
+  amber: "FFB74D",
   green: "81C784",
   white: "FFFFFF",
   cardBg: "252220",
   divider: "3A3634",
 } as const;
 
+let COLORS: Record<keyof typeof DEFAULT_COLORS, string> = { ...DEFAULT_COLORS };
+
 const FONT = "Calibri";
+
+/** Track slide numbers (reset per generation) */
+let slideCounter = 0;
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -57,6 +77,43 @@ function addBottomBar(slide: PptxGenJS.Slide) {
     w: "100%",
     h: 0.15,
     fill: { color: COLORS.brand },
+  });
+}
+
+/** Add header bar + project name + slide number (for non-title slides) */
+function addSlideChrome(slide: PptxGenJS.Slide, projectName: string) {
+  slideCounter++;
+
+  // Thin accent line at top
+  slide.addShape("rect", {
+    x: 0,
+    y: 0,
+    w: "100%",
+    h: 0.03,
+    fill: { color: COLORS.brand },
+  });
+
+  // Project name top-left
+  slide.addText(projectName, {
+    x: 0.3,
+    y: 0.06,
+    w: 4,
+    h: 0.25,
+    fontSize: 9,
+    color: COLORS.textMuted,
+    fontFace: FONT,
+  });
+
+  // Slide number bottom-right
+  slide.addText(`${slideCounter}`, {
+    x: 8.8,
+    y: 7.05,
+    w: 0.6,
+    h: 0.25,
+    fontSize: 9,
+    color: COLORS.textMuted,
+    fontFace: FONT,
+    align: "right",
   });
 }
 
@@ -143,6 +200,19 @@ function buildTitleSlide(pptx: PptxGenJS, data: ExportData) {
     fontFace: FONT,
   });
 
+  // Client name if provided
+  if (data.branding?.clientName) {
+    slide.addText(`Prepared for ${data.branding.clientName}`, {
+      x: 0.8,
+      y: 4.8,
+      w: 4,
+      h: 0.4,
+      fontSize: 13,
+      color: COLORS.text,
+      fontFace: FONT,
+    });
+  }
+
   slide.addText("Created with JourneyMapper", {
     x: 0.8,
     y: 6.4,
@@ -157,9 +227,10 @@ function buildTitleSlide(pptx: PptxGenJS, data: ExportData) {
   addBottomBar(slide);
 }
 
-function buildExecutiveSummarySlide(pptx: PptxGenJS, summary: string) {
+function buildExecutiveSummarySlide(pptx: PptxGenJS, summary: string, projectName: string) {
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, projectName);
 
   addSlideTitle(slide, "Executive Summary");
 
@@ -187,11 +258,12 @@ function buildExecutiveSummarySlide(pptx: PptxGenJS, summary: string) {
   addBottomBar(slide);
 }
 
-function buildJourneyOverviewSlide(pptx: PptxGenJS, data: ExportData) {
+function buildBlueprintOverviewSlide(pptx: PptxGenJS, data: ExportData) {
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, data.projectName);
 
-  addSlideTitle(slide, "Journey Overview");
+  addSlideTitle(slide, "Blueprint Overview");
 
   const stageCount = data.stages.length;
   if (stageCount === 0) {
@@ -208,133 +280,148 @@ function buildJourneyOverviewSlide(pptx: PptxGenJS, data: ExportData) {
     return;
   }
 
-  const maxVisible = Math.min(stageCount, 8);
-  const totalWidth = 8.6;
-  const gap = 0.15;
-  const boxWidth = (totalWidth - gap * (maxVisible - 1)) / maxVisible;
-  const startX = 0.7;
-  const yTop = 1.6;
-  const boxHeight = 1.0;
+  // Blueprint lanes
+  const LANES = [
+    { id: "physical_evidence", label: "Physical Evidence" },
+    { id: "customer_actions", label: "Customer Actions" },
+    { id: "frontstage", label: "Frontstage" },
+    { id: "backstage", label: "Backstage" },
+    { id: "support_processes", label: "Support Processes" },
+  ];
 
-  for (let i = 0; i < maxVisible; i++) {
-    const stage = data.stages[i];
-    const x = startX + i * (boxWidth + gap);
+  // Lines of visibility drawn AFTER these lane indices
+  const VISIBILITY_LINES = [
+    { afterIndex: 1, label: "Line of Interaction" },
+    { afterIndex: 2, label: "Line of Visibility" },
+    { afterIndex: 3, label: "Line of Internal Interaction" },
+  ];
 
-    // Stage box
+  const maxStages = Math.min(stageCount, 8);
+  const labelColWidth = 1.6;
+  const tableStartX = 0.6;
+  const tableStartY = 1.4;
+  const totalTableWidth = 8.8;
+  const stageColWidth = (totalTableWidth - labelColWidth) / maxStages;
+  const rowHeight = 0.8;
+  const totalHeight = LANES.length * rowHeight;
+
+  // Stage headers
+  for (let i = 0; i < maxStages; i++) {
+    const x = tableStartX + labelColWidth + i * stageColWidth;
     slide.addShape("roundRect", {
-      x,
-      y: yTop,
-      w: boxWidth,
-      h: boxHeight,
-      fill: { color: COLORS.cardBg },
-      line: { color: COLORS.brand, width: 1 },
-      rectRadius: 0.08,
+      x: x + 0.03,
+      y: tableStartY,
+      w: stageColWidth - 0.06,
+      h: 0.45,
+      fill: { color: COLORS.brand },
+      rectRadius: 0.06,
     });
+    slide.addText(truncate(data.stages[i].label, 18), {
+      x: x + 0.03,
+      y: tableStartY,
+      w: stageColWidth - 0.06,
+      h: 0.45,
+      fontSize: 8,
+      color: COLORS.white,
+      fontFace: FONT,
+      align: "center",
+      valign: "middle",
+      bold: true,
+    });
+  }
 
-    // Stage number
-    slide.addText(`${i + 1}`, {
-      x,
-      y: yTop + 0.08,
-      w: boxWidth,
-      h: 0.3,
-      fontSize: 10,
-      color: COLORS.brand,
+  const gridStartY = tableStartY + 0.55;
+
+  // Lane rows
+  for (let laneIdx = 0; laneIdx < LANES.length; laneIdx++) {
+    const lane = LANES[laneIdx];
+    const y = gridStartY + laneIdx * rowHeight;
+
+    // Lane label
+    slide.addText(lane.label, {
+      x: tableStartX,
+      y,
+      w: labelColWidth - 0.1,
+      h: rowHeight,
+      fontSize: 8,
+      color: COLORS.textMuted,
       fontFace: FONT,
       bold: true,
-      align: "center",
+      valign: "middle",
     });
 
-    // Stage label
-    slide.addText(truncate(stage.label, 30), {
-      x: x + 0.05,
-      y: yTop + 0.35,
-      w: boxWidth - 0.1,
-      h: 0.55,
-      fontSize: 9,
-      color: COLORS.text,
-      fontFace: FONT,
-      align: "center",
-      valign: "top",
-    });
+    // Cell for each stage
+    for (let stageIdx = 0; stageIdx < maxStages; stageIdx++) {
+      const x = tableStartX + labelColWidth + stageIdx * stageColWidth;
 
-    // Arrow between stages
-    if (i < maxVisible - 1) {
-      const arrowX = x + boxWidth;
+      // Cell background
       slide.addShape("rect", {
-        x: arrowX,
-        y: yTop + boxHeight / 2 - 0.015,
-        w: gap,
-        h: 0.03,
+        x: x + 0.02,
+        y: y + 0.02,
+        w: stageColWidth - 0.04,
+        h: rowHeight - 0.04,
+        fill: { color: COLORS.cardBg },
+        line: { color: COLORS.divider, width: 0.5 },
+      });
+
+      // Count nodes matching this lane and stage
+      const matchingNodes = data.nodes.filter((n) => {
+        const laneMatch =
+          n.lane === lane.id ||
+          n.lane.toLowerCase().replace(/\s+/g, "_") === lane.id;
+        return n.stage_index === stageIdx && laneMatch;
+      });
+
+      if (matchingNodes.length > 0) {
+        slide.addText(`${matchingNodes.length}`, {
+          x: x + 0.02,
+          y: y + 0.02,
+          w: stageColWidth - 0.04,
+          h: rowHeight - 0.04,
+          fontSize: 14,
+          color: COLORS.brand,
+          fontFace: FONT,
+          align: "center",
+          valign: "middle",
+          bold: true,
+        });
+      }
+    }
+  }
+
+  // Lines of visibility (dashed lines)
+  for (const line of VISIBILITY_LINES) {
+    const y = gridStartY + (line.afterIndex + 1) * rowHeight;
+
+    // Dashed line effect using short segments
+    const lineStartX = tableStartX + labelColWidth;
+    const lineWidth = totalTableWidth - labelColWidth;
+    const dashWidth = 0.15;
+    const gapWidth = 0.1;
+    const numDashes = Math.floor(lineWidth / (dashWidth + gapWidth));
+
+    for (let d = 0; d < numDashes; d++) {
+      slide.addShape("rect", {
+        x: lineStartX + d * (dashWidth + gapWidth),
+        y: y - 0.01,
+        w: dashWidth,
+        h: 0.02,
         fill: { color: COLORS.brand },
       });
     }
-  }
 
-  // Count of nodes per stage below
-  const yStats = yTop + boxHeight + 0.4;
-  for (let i = 0; i < maxVisible; i++) {
-    const x = startX + i * (boxWidth + gap);
-    const nodesInStage = data.nodes.filter((n) => n.stage_index === i);
-    const touchpoints = nodesInStage.filter(
-      (n) => n.type === "touchpoint" || n.type === "action"
-    ).length;
-    const painCount = nodesInStage.filter(
-      (n) => n.type === "pain_point"
-    ).length;
-
-    const statsText = `${touchpoints} touchpoint${touchpoints !== 1 ? "s" : ""}${painCount > 0 ? ` | ${painCount} pain` : ""}`;
-    slide.addText(statsText, {
-      x: x + 0.02,
-      y: yStats,
-      w: boxWidth - 0.04,
-      h: 0.35,
-      fontSize: 7,
-      color: COLORS.textMuted,
-      fontFace: FONT,
-      align: "center",
-    });
-  }
-
-  // Emotional journey line (if sentiment data exists)
-  const sentimentNodes = data.nodes.filter(
-    (n) => n.sentiment !== undefined && n.sentiment !== null
-  );
-  if (sentimentNodes.length > 0) {
-    const yEmotionLabel = yStats + 0.6;
-    slide.addText("Emotional Journey", {
-      x: 0.6,
-      y: yEmotionLabel,
-      w: 3,
-      h: 0.35,
-      fontSize: 11,
+    // Label for the line
+    slide.addText(line.label, {
+      x: tableStartX + totalTableWidth - 2.2,
+      y: y - 0.2,
+      w: 2.0,
+      h: 0.18,
+      fontSize: 6,
       color: COLORS.brand,
       fontFace: FONT,
-      bold: true,
+      italic: true,
+      align: "right",
     });
-
-    // Average sentiment per stage as bar indicators
-    const yBars = yEmotionLabel + 0.45;
-    for (let i = 0; i < maxVisible; i++) {
-      const x = startX + i * (boxWidth + gap);
-      const stageNodes = sentimentNodes.filter((n) => n.stage_index === i);
-      if (stageNodes.length === 0) continue;
-
-      const avg =
-        stageNodes.reduce((sum, n) => sum + (n.sentiment ?? 0), 0) /
-        stageNodes.length;
-      const barColor =
-        avg >= 0.3 ? COLORS.green : avg <= -0.3 ? COLORS.red : COLORS.brand;
-      const barHeight = Math.max(0.08, Math.abs(avg) * 0.6);
-
-      slide.addShape("rect", {
-        x: x + boxWidth / 2 - 0.1,
-        y: yBars + (0.6 - barHeight) / 2,
-        w: 0.2,
-        h: barHeight,
-        fill: { color: barColor },
-        rectRadius: 0.04,
-      });
-    }
   }
 
   addBottomBar(slide);
@@ -348,6 +435,7 @@ function buildStageDetailSlide(
   const stage = data.stages[stageIndex];
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, data.projectName);
 
   addSlideTitle(slide, `Stage ${stageIndex + 1}: ${stage.label}`);
 
@@ -462,10 +550,12 @@ function buildStageDetailSlide(
 
 function buildPersonaSlide(
   pptx: PptxGenJS,
-  persona: ExportData["personas"][number]
+  persona: ExportData["personas"][number],
+  projectName: string
 ) {
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, projectName);
 
   addSlideTitle(slide, persona.name);
 
@@ -599,6 +689,7 @@ function buildPersonaSlide(
 function buildPainPointsOpportunitiesSlide(pptx: PptxGenJS, data: ExportData) {
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, data.projectName);
 
   addSlideTitle(slide, "Pain Points & Opportunities");
 
@@ -725,10 +816,12 @@ function buildPainPointsOpportunitiesSlide(pptx: PptxGenJS, data: ExportData) {
 
 function buildKeyFindingsSlide(
   pptx: PptxGenJS,
-  findings: ExportData["findings"]
+  findings: ExportData["findings"],
+  projectName: string
 ) {
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, projectName);
 
   addSlideTitle(slide, "Key Findings");
 
@@ -798,9 +891,74 @@ function buildKeyFindingsSlide(
   addBottomBar(slide);
 }
 
-function buildClosingSlide(pptx: PptxGenJS, projectName: string) {
+function buildRecommendationsSlide(
+  pptx: PptxGenJS,
+  recommendations: NonNullable<ExportData["recommendations"]>,
+  projectName: string
+) {
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, projectName);
+
+  addSlideTitle(slide, "Recommendations");
+
+  // Impact priority order for sorting
+  const impactOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+  const sorted = [...recommendations]
+    .sort((a, b) => (impactOrder[a.impact] ?? 9) - (impactOrder[b.impact] ?? 9))
+    .slice(0, 8);
+
+  // Color coding helper
+  function levelColor(level: string): string {
+    switch (level.toLowerCase()) {
+      case "high":
+        return COLORS.red;
+      case "medium":
+        return COLORS.amber;
+      case "low":
+        return COLORS.green;
+      default:
+        return COLORS.textMuted;
+    }
+  }
+
+  // Table header
+  const headerRow = [
+    { text: "#", options: { fontSize: 8, bold: true, color: COLORS.white, fontFace: FONT, fill: { color: COLORS.brand }, align: "center" as const } },
+    { text: "Title", options: { fontSize: 8, bold: true, color: COLORS.white, fontFace: FONT, fill: { color: COLORS.brand } } },
+    { text: "Impact", options: { fontSize: 8, bold: true, color: COLORS.white, fontFace: FONT, fill: { color: COLORS.brand }, align: "center" as const } },
+    { text: "Effort", options: { fontSize: 8, bold: true, color: COLORS.white, fontFace: FONT, fill: { color: COLORS.brand }, align: "center" as const } },
+    { text: "Status", options: { fontSize: 8, bold: true, color: COLORS.white, fontFace: FONT, fill: { color: COLORS.brand }, align: "center" as const } },
+  ];
+
+  const dataRows = sorted.map((rec, idx) => [
+    { text: `${idx + 1}`, options: { fontSize: 8, color: COLORS.textMuted, fontFace: FONT, fill: { color: COLORS.cardBg }, align: "center" as const } },
+    { text: truncate(rec.title, 50), options: { fontSize: 8, color: COLORS.text, fontFace: FONT, fill: { color: COLORS.cardBg } } },
+    { text: rec.impact.charAt(0).toUpperCase() + rec.impact.slice(1), options: { fontSize: 8, color: levelColor(rec.impact), fontFace: FONT, fill: { color: COLORS.cardBg }, align: "center" as const, bold: true } },
+    { text: rec.effort.charAt(0).toUpperCase() + rec.effort.slice(1), options: { fontSize: 8, color: levelColor(rec.effort), fontFace: FONT, fill: { color: COLORS.cardBg }, align: "center" as const, bold: true } },
+    { text: rec.status.replace(/_/g, " ").charAt(0).toUpperCase() + rec.status.replace(/_/g, " ").slice(1), options: { fontSize: 8, color: COLORS.textMuted, fontFace: FONT, fill: { color: COLORS.cardBg }, align: "center" as const } },
+  ]);
+
+  const tableRows = [headerRow, ...dataRows];
+  const colWidths = [0.4, 4.4, 1.2, 1.2, 1.6];
+
+  slide.addTable(tableRows as PptxGenJS.TableRow[], {
+    x: 0.6,
+    y: 1.3,
+    w: 8.8,
+    colW: colWidths,
+    rowH: 0.4,
+    border: { type: "solid", pt: 0.5, color: COLORS.divider },
+    margin: [4, 6, 4, 6],
+  });
+
+  addBottomBar(slide);
+}
+
+function buildClosingSlide(pptx: PptxGenJS, data: ExportData) {
+  const slide = pptx.addSlide();
+  slide.background = { color: COLORS.bg };
+  addSlideChrome(slide, data.projectName);
 
   slide.addText("Thank You", {
     x: 0,
@@ -833,12 +991,27 @@ function buildClosingSlide(pptx: PptxGenJS, projectName: string) {
     align: "center",
   });
 
-  const nextSteps = [
-    "Review and validate journey map findings with stakeholders",
-    "Prioritize pain points and opportunities for action",
-    "Define success metrics and implementation roadmap",
-    "Schedule follow-up sessions to track progress",
-  ];
+  // Use top 3 recommendations as next steps if available
+  let nextSteps: string[];
+  const recs = data.recommendations;
+  if (recs && recs.length > 0) {
+    const impactOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    const sorted = [...recs]
+      .sort((a, b) => (impactOrder[a.impact] ?? 9) - (impactOrder[b.impact] ?? 9))
+      .slice(0, 3);
+    nextSteps = sorted.map(
+      (r) => `${r.title} (${r.impact} impact, ${r.effort} effort)`
+    );
+    // Add a generic follow-up step
+    nextSteps.push("Schedule follow-up to track implementation progress");
+  } else {
+    nextSteps = [
+      "Review and validate journey map findings with stakeholders",
+      "Prioritize pain points and opportunities for action",
+      "Define success metrics and implementation roadmap",
+      "Schedule follow-up sessions to track progress",
+    ];
+  }
 
   const bullets = nextSteps.map((step) => ({
     text: step,
@@ -860,7 +1033,7 @@ function buildClosingSlide(pptx: PptxGenJS, projectName: string) {
     valign: "top",
   });
 
-  slide.addText(`${projectName} | ${formatDate()}`, {
+  slide.addText(`${data.projectName} | ${formatDate()}`, {
     x: 0,
     y: 6.9,
     w: "100%",
@@ -877,6 +1050,16 @@ function buildClosingSlide(pptx: PptxGenJS, projectName: string) {
 // ── Main generator ─────────────────────────────────────────────────────
 
 export async function generatePPTX(data: ExportData): Promise<Buffer> {
+  // Reset slide counter
+  slideCounter = 0;
+
+  // Apply branding overrides
+  COLORS = { ...DEFAULT_COLORS };
+  if (data.branding?.accentColor) {
+    // Strip # if provided
+    COLORS.brand = data.branding.accentColor.replace(/^#/, "");
+  }
+
   const pptx = new PptxGenJS();
 
   pptx.author = "JourneyMapper";
@@ -884,17 +1067,17 @@ export async function generatePPTX(data: ExportData): Promise<Buffer> {
   pptx.subject = "Journey Map Export";
   pptx.layout = "LAYOUT_WIDE";
 
-  // 1. Title slide
+  // 1. Title slide (no chrome)
   buildTitleSlide(pptx, data);
 
   // 2. Executive summary (if provided)
   if (data.executiveSummary) {
-    buildExecutiveSummarySlide(pptx, data.executiveSummary);
+    buildExecutiveSummarySlide(pptx, data.executiveSummary, data.projectName);
   }
 
-  // 3. Journey overview
+  // 3. Blueprint overview (replaces journey overview)
   if (data.stages.length > 0) {
-    buildJourneyOverviewSlide(pptx, data);
+    buildBlueprintOverviewSlide(pptx, data);
   }
 
   // 4. Stage detail slides
@@ -904,7 +1087,7 @@ export async function generatePPTX(data: ExportData): Promise<Buffer> {
 
   // 5. Persona slides
   for (const persona of data.personas) {
-    buildPersonaSlide(pptx, persona);
+    buildPersonaSlide(pptx, persona, data.projectName);
   }
 
   // 6. Pain points & opportunities
@@ -914,11 +1097,16 @@ export async function generatePPTX(data: ExportData): Promise<Buffer> {
 
   // 7. Key findings
   if (data.findings.length > 0) {
-    buildKeyFindingsSlide(pptx, data.findings);
+    buildKeyFindingsSlide(pptx, data.findings, data.projectName);
   }
 
-  // 8. Closing slide
-  buildClosingSlide(pptx, data.projectName);
+  // 8. Recommendations
+  if (data.recommendations && data.recommendations.length > 0) {
+    buildRecommendationsSlide(pptx, data.recommendations, data.projectName);
+  }
+
+  // 9. Closing slide
+  buildClosingSlide(pptx, data);
 
   const output = await pptx.write({ outputType: "nodebuffer" });
   return output as Buffer;

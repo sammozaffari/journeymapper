@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       { data: journeyMaps },
       { data: personas },
       { data: findings },
+      { data: recommendations },
     ] = await Promise.all([
       supabase
         .from("projects")
@@ -51,6 +52,11 @@ export async function POST(request: Request) {
         .from("findings")
         .select("content, finding_type")
         .eq("project_id", projectId),
+      supabase
+        .from("recommendations")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at"),
     ]);
 
     if (projectError || !project) {
@@ -211,6 +217,15 @@ export async function POST(request: Request) {
       painPoints: allPainPoints,
       opportunities: allOpportunities,
       findings: exportFindings,
+      recommendations: (recommendations ?? []).map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        impact: r.impact ?? "medium",
+        effort: r.effort ?? "medium",
+        status: r.status ?? "proposed",
+        solution_type: r.solution_type ?? "process_change",
+      })),
     };
 
     // Generate PPTX

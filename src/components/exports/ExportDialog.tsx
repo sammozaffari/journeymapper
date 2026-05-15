@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   FileSpreadsheet,
+  FileText,
   Link2,
   Loader2,
   Download,
@@ -24,7 +25,7 @@ interface ExportDialogProps {
   trigger?: React.ReactElement;
 }
 
-type ExportFormat = "pptx" | "share-link";
+type ExportFormat = "pptx" | "pdf" | "share-link";
 
 const exportOptions: Array<{
   id: ExportFormat;
@@ -41,6 +42,14 @@ const exportOptions: Array<{
     icon: FileSpreadsheet,
     color: "text-orange-400",
     bg: "bg-orange-400/10",
+  },
+  {
+    id: "pdf",
+    label: "PDF Report",
+    description: "Generate a printable PDF report of the full project",
+    icon: FileText,
+    color: "text-rose-400",
+    bg: "bg-rose-400/10",
   },
   {
     id: "share-link",
@@ -84,6 +93,20 @@ export function ExportDialog({
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
+          setOpen(false);
+        }
+      } else if (selectedFormat === "pdf") {
+        const res = await fetch("/api/export/pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId }),
+        });
+
+        if (res.ok) {
+          const html = await res.text();
+          const blob = new Blob([html], { type: "text/html" });
+          const url = URL.createObjectURL(blob);
+          window.open(url, "_blank");
           setOpen(false);
         }
       } else if (selectedFormat === "share-link") {

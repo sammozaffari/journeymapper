@@ -263,6 +263,18 @@ export async function POST(request: Request) {
 
         switch (phase) {
           case 0: {
+            // Check for existing data before overwriting
+            const { data: existingProblem } = await supabase
+              .from("problem_statements")
+              .select("id")
+              .eq("project_id", projectId)
+              .limit(1)
+              .single();
+
+            if (existingProblem) {
+              output._replaced = true;
+            }
+
             // Delete any existing problem statement for this project, then insert
             await supabase
               .from("problem_statements")
